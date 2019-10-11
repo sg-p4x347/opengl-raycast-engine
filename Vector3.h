@@ -4,6 +4,8 @@ struct Vector3
 {
 	Vector3();
 	Vector3(float x, float y, float z);
+	float Length();
+	float LengthSquared();
 	float X;
 	float Y;
 	float Z;

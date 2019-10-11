@@ -9,6 +9,16 @@ Vector3::Vector3(float x, float y, float z): X(x), Y(y), Z(z)
 {
 }
 
+float Vector3::Length()
+{
+	return std::sqrt(X * X + Y * Y + Z * Z);
+}
+
+float Vector3::LengthSquared()
+{
+	return X * X + Y * Y + Z * Z;
+}
+
 void Vector3::operator+=(const Vector3& b)
 {
 	X += b.X;

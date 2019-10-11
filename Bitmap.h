@@ -60,8 +60,22 @@ public:
 	void Set(size_t x, size_t y, Pixel& pixel) {
 		Set(x, y, std::move(pixel));
 	}
+	void Set(size_t x, size_t y, size_t width, size_t height, Pixel& pixel) {
+		for (size_t rectX = x; rectX < x + width; rectX++) {
+			for (size_t rectY = y; rectY < y + height; rectY++) {
+				Set(rectX, rectY, std::move(pixel));
+			}
+		}
+	}
 	void Add(size_t x, size_t y, Pixel& pixel) {
 		Set(x, y, Get(x, y) + pixel);
+	}
+	void Add(size_t x, size_t y, size_t width, size_t height, Pixel& pixel) {
+		for (size_t rectX = x; rectX < x + width; rectX++) {
+			for (size_t rectY = y; rectY < y + height; rectY++) {
+				Add(rectX, rectY, pixel);
+			}
+		}
 	}
 	Pixel* GetPixels() { return m_pixels; }
 	size_t GetWidth() { return m_width; }

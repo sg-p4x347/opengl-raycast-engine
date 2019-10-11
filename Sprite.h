@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector3.h"
+class World;
 class Sprite
 {
 public:
@@ -9,6 +10,9 @@ public:
 	Vector3 Impulse;
 	float Radius;
 	string Texture;
+	vector<shared_ptr<Sprite>> SpriteContacts;
+	virtual void Displace(Vector3 displacement);
+	virtual void Update(double& elapsed, World* world);
 private:
 
 };

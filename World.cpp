@@ -1,15 +1,20 @@
 #include "pch.h"
 #include "World.h"
-
+#include "Utility.h"
+#include "Item.h"
+#include "Player.h"
 const float World::MOUSE_GAIN = 0.1f;
 
-World::World() : m_player(std::make_shared<Player>(Vector3(2.f,0.5f,2.f), 0.f , 1.f, 0.1f, 1000.f, 4.f,0.25f))
+World::World()
 {
-	m_sprites.push_back(m_player);
+
+	// The player
+	m_player = std::make_shared<Player>(Vector3(2.f, 0.5f, 2.f), 0.f, 1.f, 0.1f, 1000.f, 4.f, 0.25f);
+	m_sprites.insert(m_player);
 	m_floorColor = Pixel(26, 26, 26, 255);
 	m_ceilingColor = Pixel(40, 40, 40, 255);
-
-	m_sprites.push_back(std::make_shared<Sprite>(Vector3(10.5f, 0.f,9.5f),0.25f, "key.bmp"));
+	// The key
+	m_sprites.insert(std::make_shared<Item>(Vector3(10.5f, 0.f,9.5f),0.25f, "key.bmp"));
 
 	CreateWallPath(
 		"bricks.bmp",
@@ -39,31 +44,7 @@ World::World() : m_player(std::make_shared<Player>(Vector3(2.f,0.5f,2.f), 0.f , 
 
 void World::Update(double& elapsed)
 {
-	// Update player angle
-	m_mouseDelta = Vector2(); // Consume the delta
-
-	float deltaRotation = 0.f;
-	if (m_keyStates['a']) {
-		deltaRotation += 0.1f;
-	}
-	if (m_keyStates['d']) {
-		deltaRotation += -0.1f;
-	}
-	m_player->Angle += deltaRotation;
-
-	float forwardSpeed = 0.f;
-	if (m_keyStates['w']) {
-		forwardSpeed += m_player->Speed;
-	}
-	if (m_keyStates['s']) {
-		forwardSpeed += -m_player->Speed;
-	}
-	Vector2 heading = m_player->GetHeading();
-	m_player->Impulse = Vector3(heading.X, 0.f, heading.Y) * forwardSpeed;
-	//Vector2 displacement = m_player.GetHeading() * forwardSpeed * elapsed;
-	//m_player.Move(displacement);
-	UpdateSpritePositions(elapsed);
-
+	UpdateSprites(elapsed);
 }
 
 void World::Render()
@@ -73,8 +54,9 @@ void World::Render()
 	Vector2 playerHeading = m_player->GetHeading();
 	Vector2 nearStart = playerPos + playerHeading.Left() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
 	Vector2 nearEnd = playerPos + playerHeading.Right() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
-	int visionWidth = m_backBuffer->GetWidth();
-	int visionHeight = m_backBuffer->GetHeight();
+	static const int pixelSize = 2;
+	int visionWidth = m_backBuffer->GetWidth() / pixelSize;
+	int visionHeight = m_backBuffer->GetHeight() / pixelSize;
 	double floorPercent = m_player->Position.Y;
 	double ceilingPercent = 1.0 - floorPercent;
 	int horizon = 0.5 * visionHeight;
@@ -83,7 +65,7 @@ void World::Render()
 	for (int y = 0; y < visionHeight; y++) {
 		Pixel& color = y < horizon ? m_floorColor : m_ceilingColor;
 		for (int x = 0; x < visionWidth; x++) {
-			m_backBuffer->Set(x, y, color);
+			m_backBuffer->Set(x * pixelSize, y * pixelSize, pixelSize, pixelSize, color);
 		}
 	}
 	// Raycast each column
@@ -117,7 +99,7 @@ void World::Render()
 									float value = 0.5 + 0.5 * std::abs(wallNormal.Dot(ray));
 									sample *= value;
 
-									m_backBuffer->Set(columnIndex, projectionY, sample);
+									m_backBuffer->Set(columnIndex * pixelSize, projectionY * pixelSize, pixelSize, pixelSize, sample);
 								}
 							}
 						}
@@ -150,7 +132,7 @@ void World::Render()
 									int sourceY = ((float)(y + projectionOffset) / columnHeight) * (float)texture.GetHeight();
 									Pixel sample = texture.Get(sourceX, sourceY);
 
-									m_backBuffer->Add(columnIndex, projectionY, sample);
+									m_backBuffer->Add(columnIndex * pixelSize, projectionY * pixelSize, pixelSize, pixelSize, sample);
 								}
 							}
 						}
@@ -161,6 +143,14 @@ void World::Render()
 	}
 	
 	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
+
+	// HUD
+	int inventoryIndex = 0;
+	for (auto& entry : m_player->Inventory) {
+		auto & texture = GetTexture(entry.first);
+		glDrawPixels(texture.GetWidth(), texture.GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)texture.GetPixels());
+		inventoryIndex++;
+	}
 }
 
 void World::UpdateKeyState(char key, bool state)
@@ -176,8 +166,6 @@ void World::UpdateButtonState(int button, bool state)
 void World::UpdateMousePosition(Vector2 position)
 {
 
-	m_mouseDelta += position - m_lastMousePos;
-	m_lastMousePos = position;
 }
 
 Bitmap& World::GetTexture(string name)
@@ -199,34 +187,6 @@ void World::UpdateBackBuffer(int width, int height)
 	m_backBuffer.reset(new Bitmap(width, height));
 }
 
-bool World::GetLineIntersection(Vector2 startA, Vector2 dirA, Vector2 startB, Vector2 dirB, float& tA, float& tB)
-{
-	if (dirA.Dot(dirB.Right()) != 0.f) {
-		tA = (dirB.X * (startA.Y - startB.Y) + dirB.Y * (startB.X - startA.X)) / (dirA.X * dirB.Y - dirA.Y * dirB.X);
-		tB = (dirA.X * (startB.Y - startA.Y) + dirA.Y * (startA.X - startB.X)) / (dirB.X * dirA.Y - dirB.Y * dirA.X);
-		return true;
-	}
-	return false;
-}
-
-Vector2 World::GetVectorToSegment(Vector2 start, Vector2 end, Vector2 point)
-{
-
-	Vector2 segmentDir = end - start;
-	float projection = segmentDir.Normalized().Dot(point - start);
-	if (projection <= 0) {
-		return point - start;
-	}
-	else if (projection >= segmentDir.Length()) {
-		return point - end;
-	}
-	else {
-		Vector2 segmentNormal = segmentDir.Right().Normalized();
-		return segmentNormal * segmentNormal.Dot(point - start);
-	}
-
-}
-
 void World::CreateWallPath(string texture, vector<Vector2> corners)
 {
 	for (int i = 0; i < corners.size() - 1; i++) {
@@ -236,23 +196,14 @@ void World::CreateWallPath(string texture, vector<Vector2> corners)
 	}
 }
 
-void World::UpdateSpritePositions(double& elapsed)
+void World::UpdateSprites(double& elapsed)
 {
 	for (auto& sprite : m_sprites) {
-		Vector2 lateralImpulse = Vector2(sprite->Impulse.X, sprite->Impulse.Z);
-		Vector2 deltaPos = lateralImpulse * elapsed;
-		Vector2 spritePos(sprite->Position.X, sprite->Position.Z);
-		for (auto& wall : m_walls) {
-			Vector2 futurePos = spritePos + deltaPos;
-			Vector2 walToSprite = GetVectorToSegment(wall.Start, wall.End, futurePos);
-			
-			
-			float distance = walToSprite.Length();
-			float penetration = std::max(0.f, sprite->Radius - distance);
-			deltaPos += walToSprite.Normalized() * penetration; // correct the delta pos so as not to penetrate the wall
-			
-		}
-		// Apply the corrected deltaPos
-		sprite->Position += Vector3(deltaPos.X, 0.f, deltaPos.Y);
+		sprite->Update(elapsed, this);
 	}
+}
+
+void World::RemoveSprite(shared_ptr<Sprite> sprite)
+{
+	m_sprites.erase(sprite);
 }
