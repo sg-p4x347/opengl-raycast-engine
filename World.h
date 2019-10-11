@@ -19,9 +19,9 @@ public:
 private:
 
 	static const float MOUSE_GAIN;
-	Player m_player;
+	shared_ptr<Player> m_player;
 	vector<Wall> m_walls;
-	vector<Sprite> m_sprites;
+	vector<shared_ptr<Sprite>> m_sprites;
 	map<char, bool> m_keyStates;
 	map<int, bool> m_buttonStates;
 	Vector2 m_mouseDelta;
@@ -34,6 +34,8 @@ private:
 	unique_ptr<Bitmap> m_backBuffer;
 private:
 	bool GetLineIntersection(Vector2 startA, Vector2 dirA, Vector2 startB, Vector2 dirB, float& tA, float& tB);
+	Vector2 GetVectorToSegment(Vector2 start, Vector2 end, Vector2 point);
 	void CreateWallPath(string texture, vector<Vector2> corners);
+	void UpdateSpritePositions(double& elapsed);
 };
 

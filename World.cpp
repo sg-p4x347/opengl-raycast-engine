@@ -3,17 +3,13 @@
 
 const float World::MOUSE_GAIN = 0.1f;
 
-World::World() : m_player(Vector3(0.f,0.5f,0.f), 0.f , 1.f, 0.1f, 1000.f, 4.f)
+World::World() : m_player(std::make_shared<Player>(Vector3(2.f,0.5f,2.f), 0.f , 1.f, 0.1f, 1000.f, 4.f,0.25f))
 {
+	m_sprites.push_back(m_player);
 	m_floorColor = Pixel(26, 26, 26, 255);
 	m_ceilingColor = Pixel(40, 40, 40, 255);
-	/*m_walls.push_back(Wall(Vector2(-0.5f, 0.5f), Vector2(0.5f, 0.5f), "bricks_weathered.bmp"));
-	m_walls.push_back(Wall(Vector2(0.5f, 0.5f), Vector2(0.5f, -0.5f), "bricks_mossy.bmp"));
-	m_walls.push_back(Wall(Vector2(0.5f, -0.5f), Vector2(-0.5f, -0.5f), "bricks.bmp"));
-	m_walls.push_back(Wall(Vector2(-0.5f, -0.5f), Vector2(-0.5f, 0.5f), "bricks.bmp"));
-	m_walls.push_back(Wall(Vector2(-20.f, 10.f), Vector2(20.f, 10.f), "bricks_weathered.bmp"));*/
 
-	m_sprites.push_back(Sprite(Vector3(10.5f, 0.f,9.5f), "key.bmp"));
+	m_sprites.push_back(std::make_shared<Sprite>(Vector3(10.5f, 0.f,9.5f),0.25f, "key.bmp"));
 
 	CreateWallPath(
 		"bricks.bmp",
@@ -44,7 +40,6 @@ World::World() : m_player(Vector3(0.f,0.5f,0.f), 0.f , 1.f, 0.1f, 1000.f, 4.f)
 void World::Update(double& elapsed)
 {
 	// Update player angle
-	
 	m_mouseDelta = Vector2(); // Consume the delta
 
 	float deltaRotation = 0.f;
@@ -54,30 +49,33 @@ void World::Update(double& elapsed)
 	if (m_keyStates['d']) {
 		deltaRotation += -0.1f;
 	}
-	m_player.SetAngle(m_player.GetAngle() + deltaRotation);
+	m_player->Angle += deltaRotation;
 
 	float forwardSpeed = 0.f;
 	if (m_keyStates['w']) {
-		forwardSpeed += m_player.GetSpeed();
+		forwardSpeed += m_player->Speed;
 	}
 	if (m_keyStates['s']) {
-		forwardSpeed += -m_player.GetSpeed();
+		forwardSpeed += -m_player->Speed;
 	}
-	Vector2 displacement = m_player.GetHeading() * forwardSpeed * elapsed;
-	m_player.Move(displacement);
+	Vector2 heading = m_player->GetHeading();
+	m_player->Impulse = Vector3(heading.X, 0.f, heading.Y) * forwardSpeed;
+	//Vector2 displacement = m_player.GetHeading() * forwardSpeed * elapsed;
+	//m_player.Move(displacement);
+	UpdateSpritePositions(elapsed);
 
 }
 
 void World::Render()
 {
 	std::lock_guard<mutex> lock(m_mutex);
-	Vector2 playerPos = Vector2(m_player.GetPosition().X, m_player.GetPosition().Z);
-	Vector2 playerHeading = m_player.GetHeading();
-	Vector2 nearStart = playerPos + playerHeading.Left() * std::tan(m_player.GetFOV() * 0.5f) * m_player.GetNearPlane() + playerHeading * m_player.GetNearPlane();
-	Vector2 nearEnd = playerPos + playerHeading.Right() * std::tan(m_player.GetFOV() * 0.5f) * m_player.GetNearPlane() + playerHeading * m_player.GetNearPlane();
+	Vector2 playerPos = Vector2(m_player->Position.X, m_player->Position.Z);
+	Vector2 playerHeading = m_player->GetHeading();
+	Vector2 nearStart = playerPos + playerHeading.Left() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
+	Vector2 nearEnd = playerPos + playerHeading.Right() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
 	int visionWidth = m_backBuffer->GetWidth();
 	int visionHeight = m_backBuffer->GetHeight();
-	double floorPercent = m_player.GetPosition().Y;
+	double floorPercent = m_player->Position.Y;
 	double ceilingPercent = 1.0 - floorPercent;
 	int horizon = 0.5 * visionHeight;
 	vector<double> depthBuffer(visionWidth,0.0);
@@ -130,28 +128,30 @@ void World::Render()
 		}
 		// Sprites
 		for (auto& sprite : m_sprites) {
-			Vector2 spritePos = Vector2(sprite.Position.X, sprite.Position.Z);
-			Bitmap& texture = GetTexture(sprite.Texture);
-			double distance = (spritePos - playerPos).Length();
-			float wallT;
-			float rayT;
-			
-			if (GetLineIntersection(rayStart, ray, spritePos + playerHeading.Left() * 0.5f,playerHeading.Right(), rayT, wallT)) {
-				if (rayT > 0.f && wallT >= 0.f && wallT <= 1.f) {
-					double depth = 1.f / distance;
-					if (depth > depthBuffer[columnIndex]) {
+			if (sprite->Texture != "") {
+				Vector2 spritePos = Vector2(sprite->Position.X, sprite->Position.Z);
+				Bitmap& texture = GetTexture(sprite->Texture);
+				double distance = (spritePos - playerPos).Length();
+				float wallT;
+				float rayT;
 
-						int columnHeight = visionWidth / distance;
-						int projectionHeight = std::min(visionHeight, columnHeight);
-						int projectionOffset = std::max(0, -(int)(horizon - floorPercent * columnHeight));
-						for (int y = 0; y < projectionHeight; y++) {
-							int projectionY = horizon - columnHeight * floorPercent + y + projectionOffset;
-							if (projectionY >= 0 && projectionY < visionHeight) {
-								int sourceX = (float)(texture.GetWidth() - 1) * wallT;
-								int sourceY = ((float)(y + projectionOffset) / columnHeight) * (float)texture.GetHeight();
-								Pixel sample = texture.Get(sourceX, sourceY);
+				if (GetLineIntersection(rayStart, ray, spritePos + playerHeading.Left() * 0.5f, playerHeading.Right(), rayT, wallT)) {
+					if (rayT > 0.f && wallT >= 0.f && wallT <= 1.f) {
+						double depth = 1.f / distance;
+						if (depth > depthBuffer[columnIndex]) {
 
-								m_backBuffer->Add(columnIndex, projectionY, sample);
+							int columnHeight = visionWidth / distance;
+							int projectionHeight = std::min(visionHeight, columnHeight);
+							int projectionOffset = std::max(0, -(int)(horizon - floorPercent * columnHeight));
+							for (int y = 0; y < projectionHeight; y++) {
+								int projectionY = horizon - columnHeight * floorPercent + y + projectionOffset;
+								if (projectionY >= 0 && projectionY < visionHeight) {
+									int sourceX = (float)(texture.GetWidth() - 1) * wallT;
+									int sourceY = ((float)(y + projectionOffset) / columnHeight) * (float)texture.GetHeight();
+									Pixel sample = texture.Get(sourceX, sourceY);
+
+									m_backBuffer->Add(columnIndex, projectionY, sample);
+								}
 							}
 						}
 					}
@@ -209,11 +209,50 @@ bool World::GetLineIntersection(Vector2 startA, Vector2 dirA, Vector2 startB, Ve
 	return false;
 }
 
+Vector2 World::GetVectorToSegment(Vector2 start, Vector2 end, Vector2 point)
+{
+
+	Vector2 segmentDir = end - start;
+	float projection = segmentDir.Normalized().Dot(point - start);
+	if (projection <= 0) {
+		return point - start;
+	}
+	else if (projection >= segmentDir.Length()) {
+		return point - end;
+	}
+	else {
+		Vector2 segmentNormal = segmentDir.Right().Normalized();
+		return segmentNormal * segmentNormal.Dot(point - start);
+	}
+
+}
+
 void World::CreateWallPath(string texture, vector<Vector2> corners)
 {
 	for (int i = 0; i < corners.size() - 1; i++) {
 		Vector2 & start = corners[i];
 		Vector2 & end = corners[i + 1];
 		m_walls.push_back(Wall(start, end, texture));
+	}
+}
+
+void World::UpdateSpritePositions(double& elapsed)
+{
+	for (auto& sprite : m_sprites) {
+		Vector2 lateralImpulse = Vector2(sprite->Impulse.X, sprite->Impulse.Z);
+		Vector2 deltaPos = lateralImpulse * elapsed;
+		Vector2 spritePos(sprite->Position.X, sprite->Position.Z);
+		for (auto& wall : m_walls) {
+			Vector2 futurePos = spritePos + deltaPos;
+			Vector2 walToSprite = GetVectorToSegment(wall.Start, wall.End, futurePos);
+			
+			
+			float distance = walToSprite.Length();
+			float penetration = std::max(0.f, sprite->Radius - distance);
+			deltaPos += walToSprite.Normalized() * penetration; // correct the delta pos so as not to penetrate the wall
+			
+		}
+		// Apply the corrected deltaPos
+		sprite->Position += Vector3(deltaPos.X, 0.f, deltaPos.Y);
 	}
 }
