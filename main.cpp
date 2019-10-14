@@ -75,7 +75,9 @@ void render() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	world.Render();
-
+	auto& test = world.GetTexture("test.bmp");
+	auto bitmask = test.GetOpaqueBitMask();
+	glBitmap(test.GetWidth(), test.GetHeight(), 0, 0, 0, 0, (GLubyte*)& bitmask[0]);
 	// flush out the buffer contents
 	glFlush(); 
 }

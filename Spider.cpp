@@ -19,18 +19,18 @@ void Spider::Update(double& elapsed, World* world)
 	if (distance <= SpideySenseRange) {
 		Vector2 heading = toPlayer.Normalized();
 		Angle = std::atan2f(heading.X, heading.Y);
-		if (distance >= MeleeRange - 0.05) {
+		if (distance >= 0.1) {
 			// Get closer
 			Impulse = Vector3(heading.X, 0.f, heading.Y) * Speed;
 			// Hold off attack until closer
 			MeleeAttack = false;
 		}
-		else if (distance < MeleeRange - 0.1f) {
-			// Get farther (a fudge factor keeps from jittering)
-			Impulse = -Vector3(heading.X, 0.f, heading.Y) * Speed;
-			// Attack
-			MeleeAttack = true;
-		}
+		//else if (distance < MeleeRange - 0.1f) {
+		//	// Get farther (a fudge factor keeps from jittering)
+		//	Impulse = -Vector3(heading.X, 0.f, heading.Y) * Speed;
+		//	// Attack
+		//	MeleeAttack = true;
+		//}
 		else {
 			// Stop
 			Impulse = Vector3();

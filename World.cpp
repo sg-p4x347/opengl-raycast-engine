@@ -27,7 +27,7 @@ World::World()
 	CreateWallPath(
 		"bricks.bmp",
 		vector<Vector2> {
-		Vector2(9, 8),
+			Vector2(9, 8),
 			Vector2(6, 4),
 			Vector2(0, 4),
 			Vector2(0, 0),
@@ -37,7 +37,7 @@ World::World()
 			Vector2(18, 13),
 			Vector2(13, 13),
 			Vector2(10, 9)
-	}
+		}
 	);
 	// Columns
 	for (int x = 8; x < 20; x += 2) {
@@ -59,7 +59,7 @@ World::World()
 		vector<Vector2> {
 		Vector2(0, 9),
 			Vector2(10, 9)
-	}
+		}
 	);
 	// Waterfall
 	auto waterWall = std::make_shared<AnimatedWall>(Vector2(8.75, 8), Vector2(9.75, 9), "water.bmp", Vector2(0.f, -2.f));
@@ -235,7 +235,7 @@ void World::Render()
 	}
 	
 	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
-
+	
 	// HUD
 	int inventoryIndex = 0;
 	for (auto& entry : m_player->Inventory) {
