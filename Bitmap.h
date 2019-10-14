@@ -51,8 +51,14 @@ public:
 		}
 		return Bitmap(0, 0);
 	}
-	Pixel Get(size_t x, size_t y) const {
-		return m_pixels[y * m_width + x];
+	Pixel Get(int x, int y) const {
+		if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
+			return m_pixels[y * m_width + x];
+		}
+		else {
+			return Pixel(0, 0, 0, 0);
+		}
+		
 	}
 	void Set(size_t x, size_t y, Pixel&& pixel) {
 		m_pixels[y * m_width + x] = pixel;

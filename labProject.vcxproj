@@ -19,8 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimatedWall.cpp" />
     <ClCompile Include="Bitmap.cpp" />
+    <ClCompile Include="Door.cpp" />
+    <ClCompile Include="Agent.cpp" />
     <ClCompile Include="Item.cpp" />
+    <ClCompile Include="Rect.cpp" />
+    <ClCompile Include="Region.cpp" />
+    <ClCompile Include="Spider.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Pixel.cpp" />
@@ -40,8 +46,14 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimatedWall.h" />
     <ClInclude Include="Bitmap.h" />
+    <ClInclude Include="Door.h" />
+    <ClInclude Include="Agent.h" />
     <ClInclude Include="Item.h" />
+    <ClInclude Include="Rect.h" />
+    <ClInclude Include="Region.h" />
+    <ClInclude Include="Spider.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Pixel.h" />
@@ -57,6 +69,7 @@
     <ProjectGuid>{2D559046-A926-489C-A651-B9DD25950A64}</ProjectGuid>
     <RootNamespace>labProject</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>ore</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

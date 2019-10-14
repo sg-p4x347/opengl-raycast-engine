@@ -21,6 +21,7 @@ void initialize();
 void gameTick(int value = 0);
 void render();
 void mouseMoveHandler(int cursorX, int cursorY);
+void mouseButtonHandler(int button, int state, int x, int y);
 void keyHandler(unsigned char key, int x, int y);
 void keyUpHandler(unsigned char key, int x, int y);
 void windowChangeHandler(int width, int height);
@@ -39,6 +40,7 @@ int main(int argc, char ** argv) {
 	// register a callback
 	glutDisplayFunc(render);
 	glutPassiveMotionFunc(mouseMoveHandler);
+	glutMouseFunc(mouseButtonHandler);
 	glutKeyboardFunc(keyHandler);
 	glutKeyboardUpFunc(keyUpHandler);
 	glutReshapeFunc(windowChangeHandler);
@@ -81,6 +83,11 @@ void render() {
 void mouseMoveHandler(int cursorX, int cursorY)
 {
 	world.UpdateMousePosition(Vector2(cursorX, cursorY));
+}
+
+void mouseButtonHandler(int button, int state, int x, int y)
+{
+	world.UpdateButtonState(button, state == GLUT_DOWN);
 }
 
 void keyHandler(unsigned char key, int x, int y)
