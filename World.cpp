@@ -6,8 +6,7 @@
 #include "Door.h"
 #include "AnimatedWall.h"
 #include "Spider.h"
-#include "RenderJob.h"
-
+const float World::MOUSE_GAIN = 0.1f;
 const float World::REGION_WIDTH = 16.f;
 const float World::UPDATE_RANGE = 256.f;
 
@@ -73,8 +72,6 @@ World::World()
 
 	// Omega Gaming Project logo
 	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
-
-	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
 }
 
 void World::Update(double& elapsed)
@@ -86,17 +83,168 @@ void World::Update(double& elapsed)
 	UpdateSprites(elapsed, m_sprites);
 	m_walls = CollectWalls(m_loadedRegions);
 	UpdateWalls(elapsed, m_walls);
-
-	if (m_keyStates[27]) {
-		UnlockPointer();
-	}
 }
 
 void World::Render()
 {
-	RenderPerspective();
-	RenderHUD();
-	RenderMenu();
+	std::lock_guard<mutex> lock(m_mutex);
+	Vector2 playerPos = m_player->GetMapPosition();
+	Vector2 playerHeading = m_player->GetHeading();
+	Vector2 nearStart = playerPos + playerHeading.Left() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
+	Vector2 farStart = playerPos + playerHeading.Left() * std::tan(m_player->FOV * 0.5f) * m_player->FarPlane + playerHeading * m_player->FarPlane;
+	Vector2 nearEnd = playerPos + playerHeading.Right() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
+	Vector2 farEnd = playerPos + playerHeading.Right() * std::tan(m_player->FOV * 0.5f) * m_player->FarPlane + playerHeading * m_player->FarPlane;
+	static const int pixelSize = 2;
+	int visionWidth = m_backBuffer->GetWidth() / pixelSize;
+	int visionHeight = m_backBuffer->GetHeight() / pixelSize;
+	double floorPercent = m_player->Position.Y;
+	double ceilingPercent = 1.0 - floorPercent;
+	int horizon = 0.5 * visionHeight;
+	vector<double> depthBuffer(visionWidth,0.0);
+	// Fill in the floor and ceiling
+	for (int y = 0; y < visionHeight; y++) {
+		Pixel& color = y < horizon ? m_floorColor : m_ceilingColor;
+		for (int x = 0; x < visionWidth; x++) {
+			m_backBuffer->Set(x * pixelSize, y * pixelSize, pixelSize, pixelSize, color);
+		}
+	}
+	set<shared_ptr<Region>> regions;
+	RegionsContainingRect(Rect::BoundingRect(playerPos, farStart, farEnd), regions);
+	set<shared_ptr<Wall>> walls = CollectWalls(regions);
+	vector<shared_ptr<Wall>> depthSortedWalls;
+	for (auto& wall : walls)
+		depthSortedWalls.push_back(wall);
+	
+	std::sort(depthSortedWalls.begin(), depthSortedWalls.end(), [=](const shared_ptr<Wall>& a, const shared_ptr<Wall>& b) {
+		if (!a->Alpha) {
+			if (b->Alpha) {
+				return true; // Always render opaque walls before alpha walls
+			}
+			else {
+				// Render nearer opaque walls first
+				return ((a->Start + a->End) * 0.5f - playerPos).LengthSquared() < ((b->Start + b->End) * 0.5f - playerPos).LengthSquared();
+			}
+		}
+		else {
+			if (!b->Alpha) {
+				return false; // Always render alpha walls after opaque walls
+			}
+			else {
+				// Render further alpha walls first
+				return ((a->Start + a->End) * 0.5f - playerPos).LengthSquared() > ((b->Start + b->End) * 0.5f - playerPos).LengthSquared();
+			}
+		}
+	});
+	// Raycast each column
+	for (int columnIndex = 0; columnIndex < visionWidth; columnIndex++) {
+		
+		Vector2 rayStart = nearStart + (nearEnd - nearStart) * ((float)columnIndex / (float)visionWidth);
+		Vector2 ray = (rayStart - playerPos).Normalized();
+		// Walls
+		for (auto& wall : depthSortedWalls) {
+			Vector2 wallNormal = wall->GetNormal();
+			Bitmap& texture = GetTexture(wall->Texture);
+			if ((wall->Start - playerPos).Dot(playerHeading) > 0.f || (wall->End - playerPos).Dot(playerHeading) > 0.f) {
+				float wallT;
+				float rayT;
+				if (GetLineIntersection(rayStart, ray, wall->Start, wall->End - wall->Start, rayT, wallT)) {
+					if (rayT > 0.f && wallT >= 0.f && wallT <= 1.f) {
+						double depth = 1.f / rayT;
+						if (depth > depthBuffer[columnIndex]) {
+							if (!wall->Alpha) {
+								depthBuffer[columnIndex] = depth;
+							}
+							double distance = rayT + (rayStart - playerPos).Length();
+
+							int columnHeight = visionWidth / distance;
+							int projectionHeight = std::min(visionHeight, columnHeight);
+							int projectionOffset = std::max(0, -(int)(horizon - floorPercent * columnHeight));
+							for (int y = 0; y < projectionHeight; y++) {
+								int projectionY = horizon - columnHeight * floorPercent + y + projectionOffset;
+								if (projectionY >= 0 && projectionY < visionHeight) {
+									int sourceX = (wallT * (wall->Length()) + wall->TextureSampleOffset.X) * (float)(texture.GetWidth() - 1);
+									int sourceY = ((float)(y + projectionOffset) / columnHeight + wall->TextureSampleOffset.Y) * (float)(texture.GetHeight() - 1);
+									if (wall->WrapTextureX)
+										sourceX = (sourceX + texture.GetWidth()) % (texture.GetWidth() - 1);
+									if (wall->WrapTextureY)
+										sourceY = (sourceY + texture.GetHeight()) % (texture.GetHeight() - 1);
+
+									Pixel sample = texture.Get(sourceX, sourceY);
+									// Shade the sample based off the infleciton to the wall normal (e.g. shallower = darker)
+									float value = 0.5 + 0.5 * std::abs(wallNormal.Dot(ray));
+									sample *= value;
+
+									m_backBuffer->Add(columnIndex * pixelSize, projectionY * pixelSize, pixelSize, pixelSize, sample);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		vector<shared_ptr<Sprite>> depthSortedSprites;
+		for (auto& sprite : m_sprites) {
+			if (sprite->Texture != "") {
+				Vector2 spritePos = Vector2(sprite->Position.X, sprite->Position.Z);
+				Vector2 toSprite = spritePos - playerPos;
+				if (toSprite.Dot(playerHeading) >= 0.f) {
+					depthSortedSprites.push_back(sprite);
+				}
+			}
+		}
+		std::sort(depthSortedSprites.begin(), depthSortedSprites.end(), [=](const shared_ptr<Sprite> & a, const shared_ptr<Sprite> & b) -> bool {
+			Vector2 aPos = Vector2(a->Position.X, a->Position.Z);
+			Vector2 bPos = Vector2(b->Position.X, b->Position.Z);
+			return (aPos - playerPos).LengthSquared() > (bPos - playerPos).LengthSquared();
+		});
+		// Sprites
+		for (auto& sprite : depthSortedSprites) {
+			if (sprite->Texture != "") {
+				Vector2 spritePos = Vector2(sprite->Position.X, sprite->Position.Z);
+				Vector2 toSprite = spritePos - playerPos;
+				if (toSprite.Dot(playerHeading) >= 0.f) {
+					Bitmap& texture = GetTexture(sprite->Texture);
+					double distance = toSprite.Length();
+					float wallT;
+					float rayT;
+
+					if (GetLineIntersection(rayStart, ray, spritePos + playerHeading.Left() * 0.5f, playerHeading.Right(), rayT, wallT)) {
+						if (rayT > 0.f && wallT >= 0.f && wallT <= 1.f) {
+							double depth = 1.f / distance;
+							if (depth > depthBuffer[columnIndex]) {
+
+								int columnHeight = visionWidth / distance;
+								int projectionHeight = std::min(visionHeight, columnHeight);
+								int projectionOffset = std::max(0, -(int)(horizon - floorPercent * columnHeight));
+								for (int y = 0; y < projectionHeight; y++) {
+									int projectionY = horizon - columnHeight * floorPercent + y + projectionOffset;
+									if (projectionY >= 0 && projectionY < visionHeight) {
+										int sourceX = (float)(texture.GetWidth() - 1) * wallT;
+										int sourceY = ((float)(y + projectionOffset) / columnHeight) * (float)(texture.GetHeight() - 1);
+										Pixel sample = texture.Get(sourceX, sourceY);
+
+										m_backBuffer->Add(columnIndex * pixelSize, projectionY * pixelSize, pixelSize, pixelSize, sample);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
+	
+	// HUD
+	int inventoryIndex = 0;
+	for (auto& entry : m_player->Inventory) {
+		if (entry.second > 0) {
+			auto& texture = GetTexture(entry.first);
+			glDrawPixels(texture.GetWidth(), texture.GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)texture.GetPixels());
+			inventoryIndex++;
+		}
+	}
 }
 
 void World::UpdateKeyState(char key, bool state)
@@ -107,31 +255,11 @@ void World::UpdateKeyState(char key, bool state)
 void World::UpdateButtonState(int button, bool state)
 {
 	m_buttonStates[button] = state;
-	LockPointer();
 }
 
 void World::UpdateMousePosition(Vector2 position)
 {
-	if (m_lockPointer) {
-		Vector2 center(glutGet(GLUT_WINDOW_WIDTH) / 2, glutGet(GLUT_WINDOW_HEIGHT) / 2);
-		m_mouseDelta += position - center;
-		glutWarpPointer(center.X, center.Y);
-	}
-	else {
-		m_mousePosition = position;
-	}
 
-	
-}
-
-Vector2 World::GetMouseDelta()
-{
-	return m_mouseDelta;
-}
-
-void World::ResetMouseDelta()
-{
-	m_mouseDelta = Vector2(0, 0);
 }
 
 Bitmap& World::GetTexture(string name)
@@ -221,198 +349,6 @@ void World::CreateWallRect(string texture, Rect rect)
 		rect.Position
 	};
 	CreateWallPath(texture, corners);
-}
-
-void World::CreateWallArc(string texture, Vector2 center,float radius, float startAngle, float endAngle, float angleStep)
-{
-	vector<Vector2> path;
-	for (float angle = startAngle; angle <= endAngle; angle += angleStep) {
-		path.push_back(center + Vector2(std::cosf(angle), std::sinf(angle)) * radius);
-	}
-	CreateWallPath(texture, path);
-}
-
-void World::LockPointer()
-{
-	m_lockPointer = true;
-	glutSetCursor(GLUT_CURSOR_NONE);
-}
-
-void World::UnlockPointer()
-{
-	m_lockPointer = false;
-	glutSetCursor(GLUT_CURSOR_INHERIT);
-}
-
-void World::RenderPerspective()
-{
-	std::lock_guard<mutex> lock(m_mutex);
-	Vector2 playerPos = m_player->GetMapPosition();
-	Vector2 playerHeading = m_player->GetHeading();
-	Vector2 nearStart = playerPos + playerHeading.Left() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
-	Vector2 farStart = playerPos + playerHeading.Left() * std::tan(m_player->FOV * 0.5f) * m_player->FarPlane + playerHeading * m_player->FarPlane;
-	Vector2 nearEnd = playerPos + playerHeading.Right() * std::tan(m_player->FOV * 0.5f) * m_player->NearPlane + playerHeading * m_player->NearPlane;
-	Vector2 farEnd = playerPos + playerHeading.Right() * std::tan(m_player->FOV * 0.5f) * m_player->FarPlane + playerHeading * m_player->FarPlane;
-	Vector2 leftFrustumNormal = (farStart - nearStart).Right().Normalized();
-	Vector2 rightFrustumNormal = (farEnd - nearEnd).Left().Normalized();
-	static const int pixelSize = 4;
-	int visionWidth = m_backBuffer->GetWidth() / pixelSize;
-	int visionHeight = m_backBuffer->GetHeight() / pixelSize;
-	double floorPercent = m_player->Position.Y;
-	double ceilingPercent = 1.0 - floorPercent;
-	int horizon = 0.5 * visionHeight;
-	vector<double> depthBuffer(visionWidth, 0.0);
-	// Fill in the floor and ceiling
-	for (int y = 0; y < visionHeight; y++) {
-		Pixel& color = y < horizon ? m_floorColor : m_ceilingColor;
-		for (int x = 0; x < visionWidth; x++) {
-			m_backBuffer->Set(x, y, color);
-		}
-	}
-	set<shared_ptr<Region>> regions;
-	RegionsContainingRect(Rect::BoundingRect(playerPos, farStart, farEnd), regions);
-	set<shared_ptr<Wall>> walls = CollectWalls(regions);
-	vector<RenderJob> renderJobs;
-	for (auto& wall : walls) {
-		Vector2 playerToStart = wall->Start - playerPos;
-		Vector2 playerToEnd = wall->End - playerPos;
-		if (playerToStart.Dot(playerHeading) > 0.f
-			|| playerToEnd.Dot(playerHeading) > 0.f) {
-			renderJobs.push_back(RenderJob(
-				wall->Texture, 
-				wall->Start,
-				wall->End,
-				wall->Alpha,
-				wall->TextureSampleOffset, 
-				wall->WrapTextureX, 
-				wall->WrapTextureY
-			));
-		}
-	}
-
-	for (auto& sprite : m_sprites) {
-		if (sprite->Texture != "") {
-			Vector2 spritePos = Vector2(sprite->Position.X, sprite->Position.Z);
-			Vector2 start = spritePos + playerHeading.Left() * 0.5f;
-			Vector2 end = spritePos + playerHeading.Right() * 0.5f;
-			Vector2 playerToStart = start - playerPos;
-			Vector2 playerToEnd = end - playerPos;
-			if (playerToStart.Dot(playerHeading) > 0.f
-				|| playerToEnd.Dot(playerHeading) > 0.f) {
-				renderJobs.push_back(RenderJob(
-					sprite->Texture,
-					start,
-					end,
-					true,
-					Vector2(),
-					false,
-					false
-				));
-			}
-		}
-	}
-	
-	//std::sort(renderJobs.begin(), renderJobs.end(), [=](const RenderJob& a, const RenderJob& b) {
-	//	if (!a.Alpha) {
-	//		if (b.Alpha) {
-	//			return true; // Always render opaque walls before alpha walls
-	//		}
-	//		else {
-	//			// Render nearer opaque walls first
-	//			return ((a.Start + a.End) * 0.5f - playerPos).LengthSquared() < ((b.Start + b.End) * 0.5f - playerPos).LengthSquared();
-	//		}
-	//	}
-	//	else {
-	//		if (!b.Alpha) {
-	//			return false; // Always render alpha walls after opaque walls
-	//		}
-	//		else {
-	//			// Render further alpha walls first
-	//			return ((a.Start + a.End) * 0.5f - playerPos).LengthSquared() > ((b.Start + b.End) * 0.5f - playerPos).LengthSquared();
-	//		}
-	//	}
-	//});
-
-	
-	// Raycast each column
-	for (int columnIndex = 0; columnIndex < visionWidth; columnIndex++) {
-		
-		Vector2 rayStart = nearStart + (nearEnd - nearStart) * ((float)columnIndex / (float)visionWidth);
-		Vector2 ray = (rayStart - playerPos).Normalized();
-		for (auto& job : renderJobs) {
-			Bitmap& texture = GetTexture(job.Texture);
-			float wallT;
-			float rayT;
-			if (GetLineIntersection(rayStart, ray, job.Start, job.End - job.Start, rayT, wallT)) {
-				if (rayT > 0.f && wallT >= 0.f && wallT <= 1.f) {
-					double depth = 1.f / rayT;
-					job.Depth = depth;
-					if (depth > depthBuffer[columnIndex]) {
-						// Only opaque jobs write to the depth buffer
-						if (!job.Alpha) {
-							depthBuffer[columnIndex] = depth;
-						}
-						double distance = rayT + (rayStart - playerPos).Length();
-
-						int columnHeight = visionWidth / distance;
-						int projectionHeight = std::min(visionHeight, columnHeight);
-						int projectionOffset = std::max(0, -(int)(horizon - floorPercent * columnHeight));
-						for (int y = 0; y < projectionHeight; y++) {
-							int projectionY = horizon - columnHeight * floorPercent + y + projectionOffset;
-							if (projectionY >= 0 && projectionY < visionHeight) {
-								int sourceX = (wallT * job.Length + job.TextureSampleOffset.X) * (float)(texture.GetWidth() - 1);
-								int sourceY = ((float)(y + projectionOffset) / columnHeight + job.TextureSampleOffset.Y) * (float)(texture.GetHeight() - 1);
-								if (job.WrapTextureX)
-									sourceX = (sourceX + texture.GetWidth()) % (texture.GetWidth() - 1);
-								if (job.WrapTextureY)
-									sourceY = (sourceY + texture.GetHeight()) % (texture.GetHeight() - 1);
-
-								Pixel sample = texture.Get(sourceX, sourceY);
-								// Shade the sample based off the infleciton to the wall normal (e.g. shallower = darker)
-								float value = 0.5 + 0.5 * std::abs(job.Normal.Dot(ray));
-								sample *= value;
-
-								m_backBuffer->Add(columnIndex, projectionY, sample);
-							}
-						}
-					}
-				}
-			}
-		}
-		std::sort(renderJobs.begin(), renderJobs.end(), [=](const RenderJob& a, const RenderJob& b) {
-			if (!a.Alpha) {
-				if (b.Alpha) {
-					return true; // Always render opaque walls before alpha walls
-				}
-				else {
-					// Render nearer opaque walls first
-					return a.Depth > b.Depth;
-				}
-			}
-			else {
-				if (!b.Alpha) {
-					return false; // Always render alpha walls after opaque walls
-				}
-				else {
-					// Render further alpha walls first
-					return a.Depth < b.Depth;
-				}
-			}
-			});
-	}
-
-
-	glRasterPos2d(0, 0);
-	glPixelZoom(pixelSize, pixelSize);
-	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
-}
-
-void World::RenderHUD()
-{
-}
-
-void World::RenderMenu()
-{
 }
 
 void World::UpdateSprites(double& elapsed, set<shared_ptr<Sprite>> & sprites)
