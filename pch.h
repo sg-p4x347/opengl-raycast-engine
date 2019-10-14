@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <map>
+#include <set>
 #include <iostream>
 #include <memory>
 #include <fstream>
@@ -19,6 +20,7 @@ using std::string;
 using std::ifstream;
 using std::vector;
 using std::map;
+using std::set;
 using std::shared_ptr;
 using std::unique_ptr;
 using std::mutex;
