@@ -83,11 +83,13 @@ public:
 			}
 		}
 	}
+	
 	Pixel* GetPixels() { return m_pixels; }
 	size_t GetWidth() { return m_width; }
 	size_t GetHeight() { return m_height; }
+	vector<uint8_t> GetOpaqueBitMask();
 private:
-	size_t m_width;
-	size_t m_height;
+	const size_t m_width;
+	const size_t m_height;
 	Pixel* m_pixels;
 };
