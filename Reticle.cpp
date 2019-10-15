@@ -1,5 +1,4 @@
-#include "Reticle.h"
-#include "Reticle.h"
+#include "pch.h"
 #include "Reticle.h"
 
 Reticle::Reticle()

@@ -19,62 +19,7 @@ World::World()
 	AddSprite(m_player);
 	m_floorColor = Pixel(26, 26, 26, 255);
 	m_ceilingColor = Pixel(40, 40, 40, 255);
-	// The key
-	AddSprite(std::make_shared<Item>(Vector3(19.f, 0.f, 1.f), 0.25f, "key.bmp"));
-	// The spiders
-	AddSprite(std::make_shared<Spider>(Vector3(14, 0.f, 8)));
-	AddSprite(std::make_shared<Spider>(Vector3(15, 0.f, 7)));
-	AddSprite(std::make_shared<Spider>(Vector3(17, 0.f, 2)));
-	CreateWallPath(
-		"bricks.bmp",
-		vector<Vector2> {
-			Vector2(9, 8),
-			Vector2(6, 4),
-			Vector2(0, 4),
-			Vector2(0, 0),
-			Vector2(20, 0),
-			Vector2(20, 5),
-			Vector2(18, 7),
-			Vector2(18, 13),
-			Vector2(13, 13),
-			Vector2(10, 9)
-		}
-	);
-	// Columns
-	for (int x = 8; x < 20; x += 2) {
-		CreateWallRect(
-			"bricks_weathered.bmp",
-			Rect(x, 4, 0.25f, 0.25f)
-		);
-	}
-	// Hallway
-	CreateWallPath(
-		"bricks_mossy.bmp",
-		vector<Vector2> {
-		Vector2(9, 8),
-			Vector2(0, 8)
-	}
-	);
-	CreateWallPath(
-		"bricks_mossy.bmp",
-		vector<Vector2> {
-		Vector2(0, 9),
-			Vector2(10, 9)
-		}
-	);
-	// Waterfall
-	auto waterWall = std::make_shared<AnimatedWall>(Vector2(8.75, 8), Vector2(9.75, 9), "water.bmp", Vector2(0.f, -2.f));
-	waterWall->Collision = false;
-	waterWall->Alpha = true;
-	AddWall(waterWall);
-
-	// Door
-	AddWall(std::make_shared<Door>(Vector2(4, 8), Vector2(4, 9), "door.bmp", "key.bmp", Vector2(0.f, 0.25f), false));
-
-	// Omega Gaming Project logo
-	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
-
-	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
+	AddRooms();
 }
 
 void World::Update(double& elapsed)
@@ -151,6 +96,76 @@ Bitmap& World::GetTexture(string name)
 void World::UpdateBackBuffer(int width, int height)
 {
 	m_backBuffer.reset(new Bitmap(width, height));
+}
+
+void World::AddRooms()
+{
+	// DEFAULT ROOM 
+	// The key
+	AddSprite(std::make_shared<Item>(Vector3(19.f, 0.f, 1.f), 0.25f, "key.bmp"));
+	// The spiders
+	AddSprite(std::make_shared<Spider>(Vector3(14, 0.f, 8)));
+	AddSprite(std::make_shared<Spider>(Vector3(15, 0.f, 7)));
+	AddSprite(std::make_shared<Spider>(Vector3(17, 0.f, 2)));
+	CreateWallPath(
+		"bricks.bmp",
+		vector<Vector2> {
+		Vector2(9, 8),
+			Vector2(6, 4),
+			Vector2(0, 4),
+			Vector2(0, 0),
+			Vector2(20, 0),
+			Vector2(20, 5),
+			Vector2(18, 7),
+			Vector2(18, 13),
+			Vector2(13, 13),
+			Vector2(10, 9)
+	}
+	);
+	// Columns
+	for (int x = 8; x < 20; x += 2) {
+		CreateWallRect(
+			"bricks_weathered.bmp",
+			Rect(x, 4, 0.25f, 0.25f)
+		);
+	}
+	// Hallway
+	CreateWallPath(
+		"bricks_mossy.bmp",
+		vector<Vector2> {
+		Vector2(9, 8),
+			Vector2(0, 8)
+	}
+	);
+	CreateWallPath(
+		"bricks_mossy.bmp",
+		vector<Vector2> {
+		Vector2(0, 9),
+			Vector2(10, 9)
+	}
+	);
+	// Waterfall
+	auto waterWall = std::make_shared<AnimatedWall>(Vector2(8.75, 8), Vector2(9.75, 9), "water.bmp", Vector2(0.f, -2.f));
+	waterWall->Collision = false;
+	waterWall->Alpha = true;
+	AddWall(waterWall);
+
+	// Door
+	AddWall(std::make_shared<Door>(Vector2(4, 8), Vector2(4, 9), "door.bmp", "key.bmp", Vector2(0.f, 0.25f), false));
+
+	// Omega Gaming Project logo
+	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
+
+	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
+
+	// DEVLYN'S ROOM
+
+	// PAUL'S ROOM
+
+	// ANTHONY'S ROOM
+
+
+	// GAGE'S ROOM
 }
 
 set<shared_ptr<Sprite>> World::GetSpritesInRange(Vector2 center, float range)

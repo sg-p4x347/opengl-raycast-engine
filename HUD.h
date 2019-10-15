@@ -1,25 +1,24 @@
 #pragma once
 #include "pch.h"
 #include "Reticle.h"
+#include "Icon.h"
 
 class HUD
 {
 public:
-	float sizeOfBottom = 0.15 * GLUT_WINDOW_HEIGHT;
-	float yPadding = 0.01 * GLUT_WINDOW_HEIGHT;
-	float xPadding = 0.01 * GLUT_WINDOW_WIDTH;
-
+	map<string, Icon> Icons;
 	map<string, int> Inventory;
 	Reticle reticle;
 
 	HUD();
-	HUD(map<string, int> & Inv);
 
+	void setInventory(map<string, int> inv);
 	void render();
 
 private:
 	void addReticle();
-	void bottomBackground();
-	void addTiles();
+	void bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding);
+	void addTiles(float& sizeOfBottom, float& yPadding, float& xPadding);
+	void addIcons(float& sizeOfBottom, float& yPadding, float& xPadding);
 };
 
