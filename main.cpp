@@ -32,7 +32,7 @@ int main(int argc, char ** argv) {
 	// specify a window size
 	glutInitWindowSize(600, 600);
 	// specify a window position
-	glutInitWindowPosition(100, 0);
+	glutInitWindowPosition(0, 0);
 	// create a titled window
 	glutCreateWindow("Project 1");	
 	// setting up
@@ -54,7 +54,7 @@ void initialize() {
 	// specify a background clor: white
 	glClearColor(0,0,0, 0);			
 	// specify a viewing area
-	gluOrtho2D(-300, 300, -300, 300); 
+	gluOrtho2D(0, 100, 0, 100); 
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -75,7 +75,7 @@ void render() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	world.Render();
-
+	
 	// flush out the buffer contents
 	glFlush(); 
 }
@@ -83,6 +83,7 @@ void render() {
 void mouseMoveHandler(int cursorX, int cursorY)
 {
 	world.UpdateMousePosition(Vector2(cursorX, cursorY));
+	
 }
 
 void mouseButtonHandler(int button, int state, int x, int y)

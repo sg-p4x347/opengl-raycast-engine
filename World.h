@@ -6,6 +6,7 @@
 #include "Sprite.h"
 #include "Region.h"
 #include "Rect.h"
+#define M_PI 3.1415926535897932384626433832795
 class World
 {
 public:
@@ -18,6 +19,8 @@ public:
 	void UpdateKeyState(char key, bool state);
 	void UpdateButtonState(int button, bool state);
 	void UpdateMousePosition(Vector2 position);
+	Vector2 GetMouseDelta();
+	void ResetMouseDelta();
 	Bitmap& GetTexture(string name);
 	void UpdateBackBuffer(int width, int height);
 	
@@ -33,10 +36,9 @@ public:
 	void AddWall(shared_ptr<Wall> wall);
 	void CreateWallPath(string texture, vector<Vector2> corners);
 	void CreateWallRect(string texture, Rect rect);
-	
-private:
+	void CreateWallArc(string texture, Vector2 center, float radius, float startAngle, float endAngle, float angleStep = M_PI / 8);
 
-	static const float MOUSE_GAIN;
+private:
 	static const float REGION_WIDTH;
 	static const float UPDATE_RANGE;
 	map<int, map<int, shared_ptr<Region>>> m_regions;
@@ -54,12 +56,29 @@ private:
 
 	map<char, bool> m_keyStates;
 	map<int, bool> m_buttonStates;
-
+	Vector2 m_mouseDelta;
+	Vector2 m_mousePosition;
+	bool m_lockPointer;
 
 private:
-	
+	//----------------------------------------------------------------
+	// Cursor
+	void LockPointer();
+	void UnlockPointer();
+
+	//----------------------------------------------------------------
+	// Rendering
+	void RenderPerspective();
+	void RenderHUD();
+	void RenderMenu();
+
+	//----------------------------------------------------------------
+	// Updating
 	void UpdateSprites(double& elapsed, set<shared_ptr<Sprite>>& sprites);
 	void UpdateWalls(double& elapsed, set<shared_ptr<Wall>>& walls);
+
+	//----------------------------------------------------------------
+	// Regions
 	void RegionsContainingPoint(Vector2 point, set<shared_ptr<Region>> & regions);
 	void RegionsContainingSegment(Vector2 start, Vector2 end, set<shared_ptr<Region>> & regions);
 	void RegionsContainingRect(Rect rect, set<shared_ptr<Region>> & regions);
