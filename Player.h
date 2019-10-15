@@ -18,7 +18,6 @@ public:
 	float FOV;
 	float Displacement;
 	map<string,int> Inventory;
-
 	HUD hud;
 };
 
