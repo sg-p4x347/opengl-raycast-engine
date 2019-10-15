@@ -8,7 +8,6 @@
 #include "Spider.h"
 #include "RenderJob.h"
 
-const float World::MOUSE_GAIN = 0.1f;
 const float World::REGION_WIDTH = 16.f;
 const float World::UPDATE_RANGE = 256.f;
 
@@ -74,6 +73,8 @@ World::World()
 
 	// Omega Gaming Project logo
 	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
+
+	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
 }
 
 void World::Update(double& elapsed)
@@ -85,6 +86,10 @@ void World::Update(double& elapsed)
 	UpdateSprites(elapsed, m_sprites);
 	m_walls = CollectWalls(m_loadedRegions);
 	UpdateWalls(elapsed, m_walls);
+
+	if (m_keyStates[27]) {
+		UnlockPointer();
+	}
 }
 
 void World::Render()
@@ -92,14 +97,6 @@ void World::Render()
 	RenderPerspective();
 	RenderHUD();
 	RenderMenu();
-
-	auto& test = GetTexture("test.bmp");
-	auto bitmask = test.GetOpaqueBitMask();
-	glColor3f(0.f, 1.f, 0.f);
-	glRasterPos2d(0, 0);
-	glBitmap(test.GetWidth(), test.GetHeight(), 0, 0, 0, 0, (GLubyte*)&bitmask[0]);
-
-
 }
 
 void World::UpdateKeyState(char key, bool state)
@@ -110,11 +107,31 @@ void World::UpdateKeyState(char key, bool state)
 void World::UpdateButtonState(int button, bool state)
 {
 	m_buttonStates[button] = state;
+	LockPointer();
 }
 
 void World::UpdateMousePosition(Vector2 position)
 {
+	if (m_lockPointer) {
+		Vector2 center(glutGet(GLUT_WINDOW_WIDTH) / 2, glutGet(GLUT_WINDOW_HEIGHT) / 2);
+		m_mouseDelta += position - center;
+		glutWarpPointer(center.X, center.Y);
+	}
+	else {
+		m_mousePosition = position;
+	}
 
+	
+}
+
+Vector2 World::GetMouseDelta()
+{
+	return m_mouseDelta;
+}
+
+void World::ResetMouseDelta()
+{
+	m_mouseDelta = Vector2(0, 0);
 }
 
 Bitmap& World::GetTexture(string name)
@@ -204,6 +221,27 @@ void World::CreateWallRect(string texture, Rect rect)
 		rect.Position
 	};
 	CreateWallPath(texture, corners);
+}
+
+void World::CreateWallArc(string texture, Vector2 center,float radius, float startAngle, float endAngle, float angleStep)
+{
+	vector<Vector2> path;
+	for (float angle = startAngle; angle <= endAngle; angle += angleStep) {
+		path.push_back(center + Vector2(std::cosf(angle), std::sinf(angle)) * radius);
+	}
+	CreateWallPath(texture, path);
+}
+
+void World::LockPointer()
+{
+	m_lockPointer = true;
+	glutSetCursor(GLUT_CURSOR_NONE);
+}
+
+void World::UnlockPointer()
+{
+	m_lockPointer = false;
+	glutSetCursor(GLUT_CURSOR_INHERIT);
 }
 
 void World::RenderPerspective()

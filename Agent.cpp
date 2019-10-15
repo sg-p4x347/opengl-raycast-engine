@@ -58,3 +58,8 @@ Vector2 Agent::GetHeading()
 {
 	return Vector2(std::cos(Angle), std::sin(Angle));
 }
+
+void Agent::ApplyDamage(float damage)
+{
+	Health -= damage;
+}

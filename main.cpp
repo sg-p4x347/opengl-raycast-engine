@@ -83,6 +83,7 @@ void render() {
 void mouseMoveHandler(int cursorX, int cursorY)
 {
 	world.UpdateMousePosition(Vector2(cursorX, cursorY));
+	
 }
 
 void mouseButtonHandler(int button, int state, int x, int y)

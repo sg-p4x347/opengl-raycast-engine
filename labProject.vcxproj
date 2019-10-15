@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="AnimatedWall.cpp" />
     <ClCompile Include="Bitmap.cpp" />
+    <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="Agent.cpp" />
     <ClCompile Include="Item.cpp" />
@@ -49,6 +50,7 @@
   <ItemGroup>
     <ClInclude Include="AnimatedWall.h" />
     <ClInclude Include="Bitmap.h" />
+    <ClInclude Include="Bullet.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="Agent.h" />
     <ClInclude Include="Item.h" />
