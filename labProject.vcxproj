@@ -23,11 +23,10 @@
     <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="Agent.cpp" />
-    <ClCompile Include="HUD.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="Rect.cpp" />
     <ClCompile Include="Region.cpp" />
-    <ClCompile Include="Reticle.cpp" />
+    <ClCompile Include="RenderJob.cpp" />
     <ClCompile Include="Spider.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="main.cpp" />
@@ -52,11 +51,10 @@
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="Agent.h" />
-    <ClInclude Include="HUD.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Region.h" />
-    <ClInclude Include="Reticle.h" />
+    <ClInclude Include="RenderJob.h" />
     <ClInclude Include="Spider.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="pch.h" />
