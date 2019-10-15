@@ -6,7 +6,6 @@
 #include "Sprite.h"
 #include "Region.h"
 #include "Rect.h"
-#define M_PI 3.1415926535897932384626433832795
 class World
 {
 public:
@@ -19,8 +18,6 @@ public:
 	void UpdateKeyState(char key, bool state);
 	void UpdateButtonState(int button, bool state);
 	void UpdateMousePosition(Vector2 position);
-	Vector2 GetMouseDelta();
-	void ResetMouseDelta();
 	Bitmap& GetTexture(string name);
 	void UpdateBackBuffer(int width, int height);
 	
@@ -36,9 +33,10 @@ public:
 	void AddWall(shared_ptr<Wall> wall);
 	void CreateWallPath(string texture, vector<Vector2> corners);
 	void CreateWallRect(string texture, Rect rect);
-	void CreateWallArc(string texture, Vector2 center, float radius, float startAngle, float endAngle, float angleStep = M_PI / 8);
-
+	
 private:
+
+	static const float MOUSE_GAIN;
 	static const float REGION_WIDTH;
 	static const float UPDATE_RANGE;
 	map<int, map<int, shared_ptr<Region>>> m_regions;
@@ -56,16 +54,10 @@ private:
 
 	map<char, bool> m_keyStates;
 	map<int, bool> m_buttonStates;
-	Vector2 m_mouseDelta;
-	Vector2 m_mousePosition;
-	bool m_lockPointer;
+
 
 private:
-	//----------------------------------------------------------------
-	// Cursor
-	void LockPointer();
-	void UnlockPointer();
-
+	
 	//----------------------------------------------------------------
 	// Rendering
 	void RenderPerspective();
