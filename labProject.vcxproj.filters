@@ -75,9 +75,18 @@
     <ClCompile Include="Bullet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HUD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Reticle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="test.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="standardDude.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -137,6 +146,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Bullet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HUD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Reticle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

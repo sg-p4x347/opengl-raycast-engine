@@ -5,9 +5,21 @@
 class HUD
 {
 public:
-	/*map<string, int> Inventory;
+	float sizeOfBottom = 0.15 * GLUT_WINDOW_HEIGHT;
+	float yPadding = 0.01 * GLUT_WINDOW_HEIGHT;
+	float xPadding = 0.01 * GLUT_WINDOW_WIDTH;
+
+	map<string, int> Inventory;
 	Reticle reticle;
 
-	HUD(map<string, int> Inv);*/
+	HUD();
+	HUD(map<string, int> & Inv);
+
+	void render();
+
+private:
+	void addReticle();
+	void bottomBackground();
+	void addTiles();
 };
 

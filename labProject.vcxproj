@@ -24,10 +24,12 @@
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="Agent.cpp" />
+    <ClCompile Include="HUD.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="Rect.cpp" />
     <ClCompile Include="Region.cpp" />
     <ClCompile Include="RenderJob.cpp" />
+    <ClCompile Include="Reticle.cpp" />
     <ClCompile Include="Spider.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="main.cpp" />
@@ -43,6 +45,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="standardDude.png" />
     <Image Include="test.bmp">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </Image>
@@ -53,10 +56,12 @@
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="Agent.h" />
+    <ClInclude Include="HUD.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Region.h" />
     <ClInclude Include="RenderJob.h" />
+    <ClInclude Include="Reticle.h" />
     <ClInclude Include="Spider.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="pch.h" />

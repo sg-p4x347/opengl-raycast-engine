@@ -409,6 +409,7 @@ void World::RenderPerspective()
 
 void World::RenderHUD()
 {
+	m_player->hud.render();
 }
 
 void World::RenderMenu()
