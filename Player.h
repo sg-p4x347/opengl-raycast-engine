@@ -13,12 +13,10 @@ public:
 	
 	float NearPlane;
 	float FarPlane;
-	
+	bool RangedAttack;
+
 	float FOV;
 	float Displacement;
 	map<string,int> Inventory;
-private:
-	Vector2 m_mouseDelta;
-	Vector2 m_lastMousePos;
 };
 

@@ -8,6 +8,7 @@ public:
 	Agent(Vector3 position, float radius, float speed, float health, float meleeRange, string texture = "", string deadTexture = "");
 	virtual void Update(double& elapsed, World* world) override;
 	Vector2 GetHeading();
+	void ApplyDamage(float damage);
 	float Health;
 
 	float MeleeRange;

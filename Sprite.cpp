@@ -44,7 +44,9 @@ void Sprite::Update(double& elapsed, World* world)
 	SpriteContacts.clear();
 
 	for (auto& otherSprite : world->GetSpritesInRange(GetMapPosition(),Radius)) {
-		SpriteContacts.push_back(otherSprite);
+		if (&*otherSprite != this) {
+			SpriteContacts.push_back(otherSprite);
+		}
 	}
 }
 
