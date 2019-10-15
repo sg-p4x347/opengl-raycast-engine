@@ -23,6 +23,8 @@ public:
 	void ResetMouseDelta();
 	Bitmap& GetTexture(string name);
 	void UpdateBackBuffer(int width, int height);
+
+	void AddRooms();
 	
 	
 	shared_ptr<Player> GetPlayer();

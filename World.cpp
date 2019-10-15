@@ -19,6 +19,88 @@ World::World()
 	AddSprite(m_player);
 	m_floorColor = Pixel(26, 26, 26, 255);
 	m_ceilingColor = Pixel(40, 40, 40, 255);
+	AddRooms();
+}
+
+void World::Update(double& elapsed)
+{
+	Vector2 playerPos = m_player->GetMapPosition();
+	m_loadedRegions.clear();
+	RegionsContainingRect(Rect(playerPos - Vector2(UPDATE_RANGE, UPDATE_RANGE), Vector2(2.f * UPDATE_RANGE, 2.f * UPDATE_RANGE)), m_loadedRegions);
+	m_sprites = CollectSprites(m_loadedRegions);
+	UpdateSprites(elapsed, m_sprites);
+	m_walls = CollectWalls(m_loadedRegions);
+	UpdateWalls(elapsed, m_walls);
+
+	if (m_keyStates[27]) {
+		UnlockPointer();
+	}
+}
+
+void World::Render()
+{
+	RenderPerspective();
+	RenderHUD();
+	RenderMenu();
+}
+
+void World::UpdateKeyState(char key, bool state)
+{
+	m_keyStates[key] = state;
+}
+
+void World::UpdateButtonState(int button, bool state)
+{
+	m_buttonStates[button] = state;
+	LockPointer();
+}
+
+void World::UpdateMousePosition(Vector2 position)
+{
+	if (m_lockPointer) {
+		Vector2 center(glutGet(GLUT_WINDOW_WIDTH) / 2, glutGet(GLUT_WINDOW_HEIGHT) / 2);
+		m_mouseDelta += position - center;
+		glutWarpPointer(center.X, center.Y);
+	}
+	else {
+		m_mousePosition = position;
+	}
+
+	
+}
+
+Vector2 World::GetMouseDelta()
+{
+	return m_mouseDelta;
+}
+
+void World::ResetMouseDelta()
+{
+	m_mouseDelta = Vector2(0, 0);
+}
+
+Bitmap& World::GetTexture(string name)
+{
+	auto it = m_textures.find(name);
+	if (it != m_textures.end()) {
+		return *(it->second);
+	}
+	else {
+		// Load the texture from file
+		auto texture = std::make_shared<Bitmap>(Bitmap::FromFile(name));
+		m_textures.insert(std::make_pair(name, texture));
+		return *texture;
+	}
+}
+
+void World::UpdateBackBuffer(int width, int height)
+{
+	m_backBuffer.reset(new Bitmap(width, height));
+}
+
+void World::AddRooms()
+{
+	// DEFAULT ROOM 
 	// The key
 	AddSprite(std::make_shared<Item>(Vector3(19.f, 0.f, 1.f), 0.25f, "key.bmp"));
 	// The spiders
@@ -75,6 +157,14 @@ World::World()
 	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
 
 	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
+
+	// DEVLYN'S ROOM
+
+	// PAUL'S ROOM
+
+	// ANTHONY'S ROOM
+  
+  // GAGE'S ROOM
 }
 
 void World::Update(double& elapsed)
@@ -97,11 +187,6 @@ void World::Render()
 	RenderPerspective();
 	RenderHUD();
 	RenderMenu();
-}
-
-void World::UpdateKeyState(char key, bool state)
-{
-	m_keyStates[key] = state;
 }
 
 void World::UpdateButtonState(int button, bool state)
@@ -409,6 +494,7 @@ void World::RenderPerspective()
 
 void World::RenderHUD()
 {
+	m_player->hud.render();
 }
 
 void World::RenderMenu()

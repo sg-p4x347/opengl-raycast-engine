@@ -21,6 +21,7 @@ Displacement(0.f)
 {
 	MeleeCooldown = 1.f;
 	MeleeDamage = 1.f;
+	hud.setInventory(Inventory);
 }
 void Player::Displace(Vector3 displacement)
 {
