@@ -245,6 +245,17 @@ void World::Render()
 			inventoryIndex++;
 		}
 	}
+
+	//Anthony's hesitant additions
+	glColor3f(1, 0, 0);
+	glBegin(GL_POINTS);
+
+	for (double theta = 0; theta < 2 * M_PI; theta += (1.0 / 360.0) * M_PI) {
+		glVertex2d((0.05 * GLUT_WINDOW_WIDTH * std::cos(theta)) + m_mousePosition.X -  2 * GLUT_WINDOW_WIDTH, -((0.05 * GLUT_WINDOW_HEIGHT * std::sin(theta)) + m_mousePosition.Y - 2 * GLUT_WINDOW_HEIGHT));
+	}
+
+	glEnd();
+	glFlush();
 }
 
 void World::UpdateKeyState(char key, bool state)
@@ -259,7 +270,7 @@ void World::UpdateButtonState(int button, bool state)
 
 void World::UpdateMousePosition(Vector2 position)
 {
-
+	m_mousePosition = position;
 }
 
 Bitmap& World::GetTexture(string name)

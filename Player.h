@@ -2,6 +2,7 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Agent.h"
+#include "HUD.h"
 class World;
 class Player : public Agent
 {
