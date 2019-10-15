@@ -13,12 +13,12 @@ struct Vector2 {
 	Vector2 Right();
 	Vector2 Left();
 	void operator+=(const Vector2& b);
-	Vector2 operator+(const Vector2& b);
+	Vector2 operator+(const Vector2& b) const;
 	void operator-=(const Vector2& b);
-	Vector2 operator-();
-	Vector2 operator-(const Vector2& b);
+	Vector2 operator-() const;
+	Vector2 operator-(const Vector2& b) const;
 	void operator*=(const float& scalar);
-	Vector2 operator*(const float& scalar);
+	Vector2 operator*(const float& scalar) const;
 	void operator/=(const float& scalar);
-	Vector2 operator/(const float& scalar);
+	Vector2 operator/(const float& scalar) const;
 };

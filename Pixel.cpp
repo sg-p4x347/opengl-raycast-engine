@@ -11,6 +11,9 @@ void Pixel::operator*=(const float & scalar)
 Pixel Pixel::operator+(const Pixel& other)
 {
 	float otherOpacity = ((float)other.A / 255.f);
+	if (otherOpacity == 0.f) {
+		return *this;
+	}
 	if (otherOpacity < 1.f) {
 		float opacity = (float)A / 255.f;
 		float oneMinusOpacity = 1.f - otherOpacity;

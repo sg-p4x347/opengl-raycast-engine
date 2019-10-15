@@ -47,7 +47,7 @@ void Vector2::operator+=(const Vector2& b)
 	Y += b.Y;
 }
 
-Vector2 Vector2::operator+(const Vector2& b)
+Vector2 Vector2::operator+(const Vector2& b) const
 {
 	return Vector2(X + b.X, Y + b.Y);
 }
@@ -58,12 +58,12 @@ void Vector2::operator-=(const Vector2& b)
 	Y -= b.Y;
 }
 
-Vector2 Vector2::operator-()
+Vector2 Vector2::operator-() const
 {
 	return Vector2(-X,-Y);
 }
 
-Vector2 Vector2::operator-(const Vector2& b)
+Vector2 Vector2::operator-(const Vector2& b) const
 {
 	return Vector2(X - b.X, Y - b.Y);
 }
@@ -74,7 +74,7 @@ void Vector2::operator*=(const float& scalar)
 	Y *= scalar;
 }
 
-Vector2 Vector2::operator*(const float& scalar)
+Vector2 Vector2::operator*(const float& scalar) const
 {
 	return Vector2(X * scalar, Y * scalar);
 }
@@ -85,7 +85,7 @@ void Vector2::operator/=(const float& scalar)
 	Y /= scalar;
 }
 
-Vector2 Vector2::operator/(const float& scalar)
+Vector2 Vector2::operator/(const float& scalar) const
 {
 	return Vector2(X / scalar, Y / scalar);
 }
