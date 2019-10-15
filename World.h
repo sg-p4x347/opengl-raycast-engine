@@ -60,8 +60,19 @@ private:
 
 private:
 	
+	//----------------------------------------------------------------
+	// Rendering
+	void RenderPerspective();
+	void RenderHUD();
+	void RenderMenu();
+
+	//----------------------------------------------------------------
+	// Updating
 	void UpdateSprites(double& elapsed, set<shared_ptr<Sprite>>& sprites);
 	void UpdateWalls(double& elapsed, set<shared_ptr<Wall>>& walls);
+
+	//----------------------------------------------------------------
+	// Regions
 	void RegionsContainingPoint(Vector2 point, set<shared_ptr<Region>> & regions);
 	void RegionsContainingSegment(Vector2 start, Vector2 end, set<shared_ptr<Region>> & regions);
 	void RegionsContainingRect(Rect rect, set<shared_ptr<Region>> & regions);
