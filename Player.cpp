@@ -3,6 +3,8 @@
 #include "World.h"
 #include "Item.h"
 #include "Door.h"
+#include "Bullet.h"
+
 Player::Player(
 	Vector3 position,
 	float angle,
@@ -34,23 +36,33 @@ void Player::Update(double& elapsed, World* world)
 		MeleeAttack = world->m_buttonStates[GLUT_LEFT_BUTTON];
 
 		float deltaRotation = 0.f;
+		deltaRotation -= world->GetMouseDelta().X * 0.005f;
+		Angle += deltaRotation;
+		world->ResetMouseDelta();
+		Vector2 inputDir;
 		if (world->m_keyStates['a']) {
-			deltaRotation += 0.1f;
+			inputDir.X -= 1.f;
 		}
 		if (world->m_keyStates['d']) {
-			deltaRotation += -0.1f;
+			inputDir.X += 1.f;
 		}
-		Angle += deltaRotation;
-
-		float forwardSpeed = 0.f;
+		
 		if (world->m_keyStates['w']) {
-			forwardSpeed += Speed;
+			inputDir.Y += 1.f;
 		}
 		if (world->m_keyStates['s']) {
-			forwardSpeed += -Speed;
+			inputDir.Y -= 1.f;
 		}
-		Vector2 heading = GetHeading();
-		Impulse = Vector3(heading.X, 0.f, heading.Y) * forwardSpeed;
+		if (inputDir.LengthSquared() > 0.f) {
+			inputDir = inputDir.Normalized();
+			Vector2 heading = GetHeading();
+			Vector2 impulse = (heading * inputDir.Y + heading.Right() * inputDir.X) * Speed;
+			
+			Impulse = Vector3(impulse.X, 0.f, impulse.Y);
+		}
+		else {
+			Impulse = Vector3();
+		}
 
 
 
@@ -69,6 +81,19 @@ void Player::Update(double& elapsed, World* world)
 				// Unlock and open the door
 				door->Open = true;
 			}
+		}
+		if (world->m_buttonStates[GLUT_RIGHT_BUTTON]) {
+			if (!RangedAttack) {
+				RangedAttack = true;
+				// Spawn a bullet
+				float bulletRadius = 0.05f;
+				Vector2 bulletPos = GetMapPosition() + GetHeading() * (Radius + bulletRadius + 0.001f);
+				Vector3 velocity = Vector3(GetHeading().X, 0.f, GetHeading().Y) * 20.f;
+				world->AddSprite(std::make_shared<Bullet>(Vector3(bulletPos.X, Position.Y, bulletPos.Y), velocity, bulletRadius, 1.f, "bird_shot.bmp"));
+			}
+		}
+		else {
+			RangedAttack = false;
 		}
 	}
 }
