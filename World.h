@@ -43,8 +43,6 @@ private:
 	static const float UPDATE_RANGE;
 	map<int, map<int, shared_ptr<Region>>> m_regions;
 
-	Vector2 m_mousePosition;
-
 	set<shared_ptr<Region>> m_loadedRegions;
 	shared_ptr<Player> m_player;
 	set<shared_ptr<Wall>> m_walls;
