@@ -12,10 +12,10 @@ public:
 	float Health;
 
 	float MeleeRange;
-	bool MeleeAttack;
+	bool Attack;
 	float MeleeDamage;
-	float MeleeCooldown;
-	float MeleeTimer;
+	float AttackCooldown;
+	float AttackTimer;
 
 	float Angle;
 	float Speed;

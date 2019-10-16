@@ -22,6 +22,81 @@ World::World()
 	AddRooms();
 }
 
+
+
+void World::AddRooms()
+{
+	// DEFAULT ROOM 
+	// The key
+	AddSprite(std::make_shared<Item>(Vector3(19.f, 0.f, 1.f), 0.25f, "key.bmp"));
+	AddSprite(std::make_shared<Item>(Vector3(5.f, 0.f, 2.f), 0.25f, "knife.bmp"));
+	AddSprite(std::make_shared<Item>(Vector3(3.f, 0.f, 2.f), 0.25f, "shotgun.bmp"));
+	// The spiders
+	AddSprite(std::make_shared<Spider>(Vector3(14, 0.f, 8)));
+	AddSprite(std::make_shared<Spider>(Vector3(15, 0.f, 7)));
+	AddSprite(std::make_shared<Spider>(Vector3(17, 0.f, 2)));
+	CreateWallPath(
+		"bricks.bmp",
+		vector<Vector2> {
+			Vector2(9, 8),
+			Vector2(6, 4),
+			Vector2(0, 4),
+			Vector2(0, 0),
+			Vector2(20, 0),
+			Vector2(20, 5),
+			Vector2(18, 7),
+			Vector2(18, 13),
+			Vector2(13, 13),
+			Vector2(10, 9)
+		}
+	);
+	// Columns
+	for (int x = 8; x < 20; x += 2) {
+		CreateWallRect(
+			"bricks_weathered.bmp",
+			Rect(x, 4, 0.25f, 0.25f)
+		);
+	}
+	// Hallway
+	CreateWallPath(
+		"bricks_mossy.bmp",
+		vector<Vector2> {
+		Vector2(9, 8),
+			Vector2(0, 8)
+	}
+	);
+	CreateWallPath(
+		"bricks_mossy.bmp",
+		vector<Vector2> {
+		Vector2(0, 9),
+			Vector2(10, 9)
+		}
+	);
+	// Waterfall
+	auto waterWall = std::make_shared<AnimatedWall>(Vector2(8.75, 8), Vector2(9.75, 9), "water.bmp", Vector2(0.f, -2.f));
+	waterWall->Collision = false;
+	waterWall->Alpha = true;
+	AddWall(waterWall);
+
+	// Door
+	AddWall(std::make_shared<Door>(Vector2(4, 8), Vector2(4, 9), "door.bmp", "key.bmp", Vector2(0.f, 0.25f), false));
+
+	// Omega Gaming Project logo
+	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
+
+	
+
+	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
+
+	// DEVLYN'S ROOM
+
+	// PAUL'S ROOM
+
+	// ANTHONY'S ROOM
+  
+  // GAGE'S ROOM
+}
+
 void World::Update(double& elapsed)
 {
 	Vector2 playerPos = m_player->GetMapPosition();
@@ -96,146 +171,10 @@ Bitmap& World::GetTexture(string name)
 void World::UpdateBackBuffer(int width, int height)
 {
 	m_backBuffer.reset(new Bitmap(width, height));
-}
-
-void World::AddRooms()
-{
-	// DEFAULT ROOM 
-	// The key
-	AddSprite(std::make_shared<Item>(Vector3(19.f, 0.f, 1.f), 0.25f, "key.bmp"));
-	// The spiders
-	AddSprite(std::make_shared<Spider>(Vector3(14, 0.f, 8)));
-	AddSprite(std::make_shared<Spider>(Vector3(15, 0.f, 7)));
-	AddSprite(std::make_shared<Spider>(Vector3(17, 0.f, 2)));
-	CreateWallPath(
-		"bricks.bmp",
-		vector<Vector2> {
-			Vector2(9, 8),
-			Vector2(6, 4),
-			Vector2(0, 4),
-			Vector2(0, 0),
-			Vector2(20, 0),
-			Vector2(20, 5),
-			Vector2(18, 7),
-			Vector2(18, 13),
-			Vector2(13, 13),
-			Vector2(10, 9)
-		}
-	);
-	// Columns
-	for (int x = 8; x < 20; x += 2) {
-		CreateWallRect(
-			"bricks_weathered.bmp",
-			Rect(x, 4, 0.25f, 0.25f)
-		);
-	}
-	// Hallway
-	CreateWallPath(
-		"bricks_mossy.bmp",
-		vector<Vector2> {
-		Vector2(9, 8),
-			Vector2(0, 8)
-	}
-	);
-	CreateWallPath(
-		"bricks_mossy.bmp",
-		vector<Vector2> {
-		Vector2(0, 9),
-			Vector2(10, 9)
-		}
-	);
-	// Waterfall
-	auto waterWall = std::make_shared<AnimatedWall>(Vector2(8.75, 8), Vector2(9.75, 9), "water.bmp", Vector2(0.f, -2.f));
-	waterWall->Collision = false;
-	waterWall->Alpha = true;
-	AddWall(waterWall);
-
-	// Door
-	AddWall(std::make_shared<Door>(Vector2(4, 8), Vector2(4, 9), "door.bmp", "key.bmp", Vector2(0.f, 0.25f), false));
-
-	// Omega Gaming Project logo
-	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
-
-	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
-
-	// DEVLYN'S ROOM
-
-	// PAUL'S ROOM
-
-	// ANTHONY'S ROOM
-  
-  // GAGE'S ROOM
-}
-
-void World::Update(double& elapsed)
-{
-	Vector2 playerPos = m_player->GetMapPosition();
-	m_loadedRegions.clear();
-	RegionsContainingRect(Rect(playerPos - Vector2(UPDATE_RANGE, UPDATE_RANGE), Vector2(2.f * UPDATE_RANGE, 2.f * UPDATE_RANGE)), m_loadedRegions);
-	m_sprites = CollectSprites(m_loadedRegions);
-	UpdateSprites(elapsed, m_sprites);
-	m_walls = CollectWalls(m_loadedRegions);
-	UpdateWalls(elapsed, m_walls);
-
-	if (m_keyStates[27]) {
-		UnlockPointer();
-	}
-}
-
-void World::Render()
-{
-	RenderPerspective();
-	RenderHUD();
-	RenderMenu();
-}
-
-void World::UpdateButtonState(int button, bool state)
-{
-	m_buttonStates[button] = state;
-	LockPointer();
-}
-
-void World::UpdateMousePosition(Vector2 position)
-{
-	if (m_lockPointer) {
-		Vector2 center(glutGet(GLUT_WINDOW_WIDTH) / 2, glutGet(GLUT_WINDOW_HEIGHT) / 2);
-		m_mouseDelta += position - center;
-		glutWarpPointer(center.X, center.Y);
-	}
-	else {
-		m_mousePosition = position;
-	}
-
-	
-}
-
-Vector2 World::GetMouseDelta()
-{
-	return m_mouseDelta;
-}
-
-void World::ResetMouseDelta()
-{
-	m_mouseDelta = Vector2(0, 0);
-}
-
-Bitmap& World::GetTexture(string name)
-{
-	auto it = m_textures.find(name);
-	if (it != m_textures.end()) {
-		return *(it->second);
-	}
-	else {
-		// Load the texture from file
-		auto texture = std::make_shared<Bitmap>(Bitmap::FromFile(name));
-		m_textures.insert(std::make_pair(name, texture));
-		return *texture;
-	}
-}
-
-void World::UpdateBackBuffer(int width, int height)
-{
-	m_backBuffer.reset(new Bitmap(width, height));
+	// specify a viewing area
+	glViewport(0, 0, width, height);
+	glLoadIdentity();
+	gluOrtho2D(0, width, 0, height);
 }
 
 set<shared_ptr<Sprite>> World::GetSpritesInRange(Vector2 center, float range)
@@ -490,11 +429,12 @@ void World::RenderPerspective()
 	glRasterPos2d(0, 0);
 	glPixelZoom(pixelSize, pixelSize);
 	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
+	glPixelZoom(1, 1);
 }
 
 void World::RenderHUD()
 {
-	m_player->hud.render();
+	m_player->hud.render(m_backBuffer->GetWidth(), m_backBuffer->GetHeight());
 }
 
 void World::RenderMenu()

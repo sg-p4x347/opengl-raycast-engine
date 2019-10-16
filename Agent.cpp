@@ -16,10 +16,10 @@ Agent::Agent(
 	Angle(0.f),
 	DeadTexture(deadTexture),
 	MeleeRange(meleeRange),
-	MeleeAttack(false),
+	Attack(false),
 	MeleeDamage(0.f),
-	MeleeCooldown(1.f),
-	MeleeTimer(MeleeCooldown)
+	AttackCooldown(1.f),
+	AttackTimer(AttackCooldown)
 {
 }
 
@@ -29,8 +29,8 @@ void Agent::Update(double& elapsed, World* world)
 
 	if (Health > 0.f) {
 		Vector2 mapPosition = GetMapPosition();
-		if (MeleeAttack && MeleeTimer >= MeleeCooldown) {
-			MeleeTimer = 0.f;
+		if (Attack && AttackTimer >= AttackCooldown) {
+			AttackTimer = 0.f;
 			Vector2 attackEnd = mapPosition + GetHeading() * MeleeRange;
 			for (auto& sprite : world->GetSpritesInRange(mapPosition, MeleeRange)) {
 				if (&*sprite != this) {
@@ -51,7 +51,7 @@ void Agent::Update(double& elapsed, World* world)
 		world->RemoveSprite(this);
 		world->AddSprite(std::make_shared<Sprite>(Position, Radius, DeadTexture));
 	}
-	MeleeTimer += elapsed;
+	AttackTimer += elapsed;
 }
 
 Vector2 Agent::GetHeading()

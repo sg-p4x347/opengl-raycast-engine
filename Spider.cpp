@@ -5,9 +5,9 @@ Spider::Spider(Vector3 position) : Agent::Agent(position, 0.25f,1.f,1.f,0.5f,"sp
 {
 	MeleeDamage = 1.f;
 	SpideySenseRange = 20.f;
-	MeleeCooldown = 2.f;
-	MeleeTimer = MeleeCooldown;
-	MeleeAttack = true;
+	AttackCooldown = 2.f;
+	AttackTimer = AttackCooldown;
+	Attack = true;
 }
 
 void Spider::Update(double& elapsed, World* world)
@@ -23,7 +23,7 @@ void Spider::Update(double& elapsed, World* world)
 			// Get closer
 			Impulse = Vector3(heading.X, 0.f, heading.Y) * Speed;
 			// Hold off attack until closer
-			MeleeAttack = false;
+			Attack = false;
 		}
 		//else if (distance < MeleeRange - 0.1f) {
 		//	// Get farther (a fudge factor keeps from jittering)
@@ -35,7 +35,7 @@ void Spider::Update(double& elapsed, World* world)
 			// Stop
 			Impulse = Vector3();
 			// Attack
-			MeleeAttack = true;
+			Attack = true;
 		}
 		
 	}

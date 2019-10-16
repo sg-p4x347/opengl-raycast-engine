@@ -13,7 +13,6 @@ public:
 	
 	float NearPlane;
 	float FarPlane;
-	bool RangedAttack;
 
 	float FOV;
 	float Displacement;

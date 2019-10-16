@@ -5,15 +5,8 @@ class Reticle
 {
 public:
 	string activeItem;
-	const map<string, int> reticleMap = {
-		{"Fist", 0},
-		{"Knife", 1},
-		{"Pistol", 2},
-		{"Key", 3}
-	};
-	
 	Reticle();
-	void renderReticle();
+	void renderReticle(int windowWidth, int windowHeight, float percentage);
 	void updateActiveItem(string active);
 };
 

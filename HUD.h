@@ -2,23 +2,24 @@
 #include "pch.h"
 #include "Reticle.h"
 #include "Icon.h"
-
+#include "Bitmap.h"
+class Player;
 class HUD
 {
 public:
-	map<string, Icon> Icons;
-	map<string, int> Inventory;
+	map<string, shared_ptr<Bitmap>> Icons;
+	map<string, vector<uint8_t>> IconMasks;
+
 	Reticle reticle;
 
-	HUD();
+	HUD(Player * player);
 
-	void setInventory(map<string, int> inv);
-	void render();
+	void render(int windowWidth, int windowHeight);
 
 private:
-	void addReticle();
-	void bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding);
-	void addTiles(float& sizeOfBottom, float& yPadding, float& xPadding);
-	void addIcons(float& sizeOfBottom, float& yPadding, float& xPadding);
+	Player* m_player;
+	void addReticle(int windowWidth, int windowHeight);
+	void bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding, int windowWidth, int windowHeight);
+	void addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int windowWidth, int windowHeight);
 };
 

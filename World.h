@@ -6,7 +6,6 @@
 #include "Sprite.h"
 #include "Region.h"
 #include "Rect.h"
-#define M_PI 3.1415926535897932384626433832795
 class World
 {
 public:
