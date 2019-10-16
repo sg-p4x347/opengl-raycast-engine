@@ -9,6 +9,11 @@ HUD::HUD(Player* player) : m_player(player)
 	REGISTER_ICON("key.bmp", "key_icon.bmp", "");
 	REGISTER_ICON("knife.bmp", "knife_icon.bmp", "knife_view.bmp");
 	REGISTER_ICON("shotgun.bmp", "shotgun_icon.bmp", "shotgun_view.bmp");
+
+	m_healthyFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/healthy_face.bmp"));
+	m_takingDamageFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/taking_damage_face.bmp"));
+	m_unhealthyFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/unhealthy_face.bmp"));
+	m_deadFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/dead_face.bmp"));
 }
 
 
@@ -22,6 +27,7 @@ void HUD::render(int windowWidth, int windowHeight)
 	renderActiveItem(windowWidth, windowHeight);
 	bottomBackground(sizeOfBottom, yPadding, xPadding, windowWidth, windowHeight);
 	addTiles(sizeOfBottom, yPadding, xPadding, windowWidth, windowHeight);
+	renderFace(windowWidth, windowHeight);
 	//addIcons(sizeOfBottom, yPadding, xPadding);
 }
 
@@ -33,20 +39,38 @@ void HUD::addReticle(int windowWidth, int windowHeight)
 void HUD::renderActiveItem(int windowWidth, int windowHeight)
 {
 	if (Views.count(m_player->ActiveItem)) {
-		static const int scale = 2;
+		static const float scale = ((float)windowHeight / 128.f) * 0.5;
 		glPixelZoom(scale, scale);
 		auto& view = *Views[m_player->ActiveItem];
-		int scaledImageWidth = view.GetWidth() * scale;
-		int scaledImageHeight = view.GetHeight() * scale;
 		
-		glRasterPos2i(windowWidth / 2 - scaledImageWidth / 2,0);
-		glDrawPixels(view.GetWidth(), view.GetWidth(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)view.GetPixels());
-		glPixelZoom(1, 1);
+		glRasterPos2i(windowWidth / 2 - view.GetWidth() * scale / 2,0);
+		glDrawPixels(view.GetWidth(), view.GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)view.GetPixels());
 	}
 }
 
 void HUD::renderFace(int windowWidth, int windowHeight)
 {
+	shared_ptr<Bitmap> face;
+	if (m_player->DamageTimer < 1.f) {
+		face = m_takingDamageFace;
+	}
+	else {
+		if (m_player->Health > 2.f) {
+			face = m_healthyFace;
+		}
+		else if (m_player->Health > 0.f) {
+			face = m_unhealthyFace;
+		}
+		else {
+			face = m_deadFace;
+		}
+	}
+	static const float scale = 1.f;
+	glPixelZoom(scale, scale);
+	glRasterPos2i(windowWidth / 2 - face->GetWidth() * scale / 2, 0);
+	glDrawPixels(face->GetWidth(), face->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)face->GetPixels());
+	
+
 }
 
 void HUD::bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding, int windowWidth, int windowHeight)
@@ -75,7 +99,7 @@ void HUD::bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding
 
 void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int windowWidth, int windowHeight)
 {
-	
+	glPixelZoom(1, 1);
 
 	int i = 0;
 	for (auto iconEntry : Icons) {

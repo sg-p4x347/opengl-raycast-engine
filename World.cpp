@@ -442,7 +442,6 @@ void World::RenderPerspective()
 	glRasterPos2d(0, 0);
 	glPixelZoom(pixelSize, pixelSize);
 	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
-	glPixelZoom(1, 1);
 }
 
 void World::RenderHUD()
