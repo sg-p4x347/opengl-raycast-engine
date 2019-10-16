@@ -1,91 +1,149 @@
 #include "pch.h"
 #include "HUD.h"
+#include "Player.h"
 
-HUD::HUD()
+#define REGISTER_ICON(item,icon,view) Icons[item] = std::make_shared<Bitmap>(Bitmap::FromFile(string("images/") + icon)); IconMasks[item] = Icons[item]->GetOpaqueBitMask(); Views[item] = std::make_shared<Bitmap>(Bitmap::FromFile(string("images/") + view));
+
+HUD::HUD(Player* player) : m_player(player)
 {
-	set<string> possibleIcons = {
-		"standardDude.bmp"
-	};
+	REGISTER_ICON("key.bmp", "key_icon.bmp", "");
+	REGISTER_ICON("knife.bmp", "knife_icon.bmp", "knife_view.bmp");
+	REGISTER_ICON("shotgun.bmp", "shotgun_icon.bmp", "shotgun_view.bmp");
 
-	for (string icon : possibleIcons) {
-		Icons.insert({ icon, Icon() });
-		Icons[icon].fileHandler(icon);
+	m_healthyFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/healthy_face.bmp"));
+	m_damagedFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/damaged_face.bmp"));
+	m_unhealthyFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/unhealthy_face.bmp"));
+
+	m_stipple = Bitmap::FromFile("images/stipple.bmp").GetOpaqueBitMask();
+}
+
+
+void HUD::render(int windowWidth, int windowHeight)
+{
+	
+	float yPadding = 0.01 * windowHeight;
+	float xPadding = 0.01 * windowWidth;
+	float sizeOfBottom = 128 + yPadding;
+	addReticle(windowWidth, windowHeight);
+	renderActiveItem(windowWidth, windowHeight);
+	bottomBackground(sizeOfBottom, yPadding, xPadding, windowWidth, windowHeight);
+	addTiles(sizeOfBottom, yPadding, xPadding, windowWidth, windowHeight);
+	renderFace(windowWidth, windowHeight);
+}
+
+void HUD::addReticle(int windowWidth, int windowHeight)
+{
+	reticle.renderReticle(windowWidth, windowHeight, m_player->AttackTimer / m_player->AttackCooldown);
+}
+
+void HUD::renderActiveItem(int windowWidth, int windowHeight)
+{
+	if (Views.count(m_player->ActiveItem)) {
+		const float scale = ((float)windowHeight / 128.f) * 0.5;
+		glPixelZoom(scale, scale);
+		auto& view = *Views[m_player->ActiveItem];
+		
+		glRasterPos2i(windowWidth / 2 - view.GetWidth() * scale / 2,0);
+		glDrawPixels(view.GetWidth(), view.GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)view.GetPixels());
 	}
+}
+
+void HUD::renderFace(int windowWidth, int windowHeight)
+{
+	shared_ptr<Bitmap> face;
+	float percentHealth = m_player->Health / Player::MaxHealth;
+	if (percentHealth > 2.f / 3.f) {
+		face = m_healthyFace;
+	}
+	else if (percentHealth > 1.f / 3.f) {
+		face = m_damagedFace;
+	}
+	else {
+		face = m_unhealthyFace;
+	}
+	static const float scale = 1.f;
+	glPixelZoom(scale, scale);
+	glRasterPos2i(windowWidth / 2 - face->GetWidth() * scale / 2, 0);
+	glDrawPixels(face->GetWidth(), face->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)face->GetPixels());
+	
 
 }
 
-void HUD::setInventory(map<string, int> inv)
+void HUD::bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding, int windowWidth, int windowHeight)
 {
-	Inventory = inv;
-}
-
-void HUD::render()
-{
-	float sizeOfBottom = 0.15 * GLUT_WINDOW_HEIGHT;
-	float yPadding = 0.01 * GLUT_WINDOW_HEIGHT;
-	float xPadding = 0.01 * GLUT_WINDOW_WIDTH;
-
-	addReticle();
-	bottomBackground(sizeOfBottom, yPadding, xPadding);
-	addTiles(sizeOfBottom, yPadding, xPadding);
-	//addIcons(sizeOfBottom, yPadding, xPadding);
-}
-
-void HUD::addReticle()
-{
-	reticle.renderReticle();
-}
-
-void HUD::bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding)
-{
-	glColor3f(115.0 / 255.0, 111.0 / 255.0, 101.0 / 255.0);
+	glColor4f(115.0 / 255.0, 111.0 / 255.0, 101.0 / 255.0, 0.5f);
 
 	glBegin(GL_POLYGON);
 
 	glVertex2d(0, sizeOfBottom);
-	glVertex2d(GLUT_WINDOW_WIDTH, sizeOfBottom);
-	glVertex2d(GLUT_WINDOW_WIDTH, 0);
+	glVertex2d(windowWidth, sizeOfBottom);
+	glVertex2d(windowWidth, 0);
 	glVertex2d(0, 0);
 
 	glEnd();
 
-	glColor3f(1, 1, 1);
+	glColor4f(1, 1, 1,0.5f);
 	glLineWidth(5);
+
+	/******************************************************
+	LINE SEGMENTS
+	******************************************************/
 	glBegin(GL_LINES);
 
 	//Top bar
 	glVertex2d(0, sizeOfBottom + (yPadding / 2.0));
-	glVertex2d(GLUT_WINDOW_WIDTH, sizeOfBottom + (yPadding / 2.0));
+	glVertex2d(windowWidth, sizeOfBottom + (yPadding / 2.0));
 
 	glEnd();
 }
 
-void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding)
+void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int windowWidth, int windowHeight)
 {
-	glColor3f(0, 0, 0);
+	glPixelZoom(1, 1);
 
-	int max = 5;
-	for (int i = 0; i < max; ++i) {
+	int i = 0;
+	for (auto iconEntry : Icons) {
+		auto & icon = *iconEntry.second;
+		int left = i * icon.GetWidth() + (xPadding / 2.0);
+		int right = left + icon.GetWidth();
+		int top = sizeOfBottom - (yPadding / 2.0);
+		int bottom = yPadding / 2.0;
+
+
+		/******************************************************
+		PATTERN FILLED POLYGONS
+		******************************************************/
+		glEnable(GL_POLYGON_STIPPLE);
+		glPolygonStipple(&m_stipple[0]);
+		glEnd();
+		
 		glBegin(GL_POLYGON);
 
-		glVertex2d(i * GLUT_WINDOW_WIDTH / max + (xPadding / 2.0), sizeOfBottom - (yPadding / 2.0));
-		glVertex2d((i + 1) * GLUT_WINDOW_WIDTH / max - (xPadding / 2.0), sizeOfBottom - (yPadding / 2.0));
-		glVertex2d((i + 1) * GLUT_WINDOW_WIDTH / max - (xPadding / 2.0), yPadding / 2.0);
-		glVertex2d(i * GLUT_WINDOW_WIDTH / max + (xPadding / 2.0), yPadding / 2.0);
+		glColor4f(0, 0, 0,0.5f);
+		glVertex2d(left, top);
+		glVertex2d(right, top);
+		glVertex2d(right, bottom);
+		glVertex2d(left, bottom);
 
 		glEnd();
-	}
-}
-
-void HUD::addIcons(float& sizeOfBottom, float& yPadding, float& xPadding)
-{
-	int tileNumber = 0;
-	for (auto icon : Icons) {
-		glBegin(GL_BITMAP);
-
-		glRasterPos2d(0, 0);
-		glDrawPixels(Icon::WIDTH, Icon::HEIGHT, GL_RGB, GL_FLOAT, (GLvoid*)Icons[icon.first].imagePixels);
-
-		glEnd();
+		glDisable(GL_POLYGON_STIPPLE);
+		glRasterPos2d(left, bottom);
+		if (m_player->Inventory[iconEntry.first] > 0) {
+			/******************************************************
+			PIXEL MAPS
+			******************************************************/
+			glDrawPixels(icon.GetWidth(), icon.GetWidth(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)icon.GetPixels());
+		}
+		else {
+			/******************************************************
+			BITMAPS
+			******************************************************/
+			// The player does not have this item, so render a flat color version of the full color icon
+			auto & mask = IconMasks[iconEntry.first];
+			glColor3f(0.1f, 0.1f, 0.1f);
+			glBitmap(icon.GetWidth(),icon.GetHeight(), 0, 0, 0, 0, &mask[0]);
+		}
+		i++;
+		
 	}
 }

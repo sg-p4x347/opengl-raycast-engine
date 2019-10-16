@@ -6,10 +6,14 @@
 #include "Sprite.h"
 #include "Region.h"
 #include "Rect.h"
-#define M_PI 3.1415926535897932384626433832795
 class World
 {
 public:
+	enum class Menu {
+		HUD,
+		Death,
+		Credits
+	};
 	friend class Sprite;
 	friend class Player;
 	friend class Item;
@@ -25,7 +29,7 @@ public:
 	void UpdateBackBuffer(int width, int height);
 
 	void AddRooms();
-	
+	void OpenMenu(Menu menu);
 	
 	shared_ptr<Player> GetPlayer();
 	// Sprites
@@ -62,6 +66,8 @@ private:
 	Vector2 m_mousePosition;
 	bool m_lockPointer;
 
+	Menu m_menu;
+
 private:
 	//----------------------------------------------------------------
 	// Cursor
@@ -73,11 +79,13 @@ private:
 	void RenderPerspective();
 	void RenderHUD();
 	void RenderMenu();
-
+	int MeasureString(void*font, string text);
+	void DrawString(void* font, string text);
 	//----------------------------------------------------------------
 	// Updating
 	void UpdateSprites(double& elapsed, set<shared_ptr<Sprite>>& sprites);
 	void UpdateWalls(double& elapsed, set<shared_ptr<Wall>>& walls);
+	void ResetPlayer();
 
 	//----------------------------------------------------------------
 	// Regions

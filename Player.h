@@ -7,13 +7,14 @@ class World;
 class Player : public Agent
 {
 public:
+	static const float MaxHealth;
 	Player(Vector3 position, float angle, float fov, float nearPlane, float farPlane, float speed, float radius);
 	virtual void Displace(Vector3 displacement) override;
 	virtual void Update(double& elapsed, World * world) override;
 	
 	float NearPlane;
 	float FarPlane;
-	bool RangedAttack;
+	string ActiveItem;
 
 	float FOV;
 	float Displacement;

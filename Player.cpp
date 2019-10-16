@@ -5,6 +5,7 @@
 #include "Door.h"
 #include "Bullet.h"
 
+const float Player::MaxHealth = 6.f;
 Player::Player(
 	Vector3 position,
 	float angle,
@@ -13,15 +14,16 @@ Player::Player(
 	float farPlane,
 	float speed,
 	float radius
-) : Agent::Agent(position, radius,speed,1.f,2.f),
+) : Agent::Agent(position, radius,speed,MaxHealth,2.f),
 FOV(fov),
 NearPlane(nearPlane),
 FarPlane(farPlane),
-Displacement(0.f)
+Displacement(0.f),
+ActiveItem(""),
+hud(this)
 {
-	MeleeCooldown = 1.f;
+	AttackCooldown = 1.f;
 	MeleeDamage = 1.f;
-	hud.setInventory(Inventory);
 }
 void Player::Displace(Vector3 displacement)
 {
@@ -34,7 +36,7 @@ void Player::Update(double& elapsed, World* world)
 {
 	Agent::Update(elapsed, world);
 	if (Health > 0.f) {
-		MeleeAttack = world->m_buttonStates[GLUT_LEFT_BUTTON];
+		
 
 		float deltaRotation = 0.f;
 		deltaRotation -= world->GetMouseDelta().X * 0.005f;
@@ -81,20 +83,32 @@ void Player::Update(double& elapsed, World* world)
 			if (door && Inventory[door->Key] > 0) {
 				// Unlock and open the door
 				door->Open = true;
+				// Consume the key
+				Inventory[door->Key]--;
+			}
+			if (wall->Texture == "logo.bmp") {
+
+				// Roll the credits
+				world->OpenMenu(World::Menu::Credits);
 			}
 		}
-		if (world->m_buttonStates[GLUT_RIGHT_BUTTON]) {
-			if (!RangedAttack) {
-				RangedAttack = true;
+		Attack = false;
+		if (world->m_buttonStates[GLUT_LEFT_BUTTON] && Inventory["knife.bmp"] > 0) {
+			ActiveItem = "knife.bmp";
+			// Melee attack
+			Attack = true;
+		}
+		else if (world->m_buttonStates[GLUT_RIGHT_BUTTON] && Inventory["shotgun.bmp"] > 0) {
+			ActiveItem = "shotgun.bmp";
+			// Ranged attack
+			if (AttackTimer >= AttackCooldown) {
+				AttackTimer = 0.f;
 				// Spawn a bullet
 				float bulletRadius = 0.05f;
 				Vector2 bulletPos = GetMapPosition() + GetHeading() * (Radius + bulletRadius + 0.001f);
 				Vector3 velocity = Vector3(GetHeading().X, 0.f, GetHeading().Y) * 20.f;
 				world->AddSprite(std::make_shared<Bullet>(Vector3(bulletPos.X, Position.Y, bulletPos.Y), velocity, bulletRadius, 1.f, "bird_shot.bmp"));
 			}
-		}
-		else {
-			RangedAttack = false;
 		}
 	}
 }

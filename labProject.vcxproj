@@ -25,7 +25,6 @@
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="Agent.cpp" />
     <ClCompile Include="HUD.cpp" />
-    <ClCompile Include="Icon.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="Rect.cpp" />
     <ClCompile Include="Region.cpp" />
@@ -46,19 +45,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="standardDude.bmp" />
-    <Image Include="test.bmp">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="AnimatedWall.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="Agent.h" />
     <ClInclude Include="HUD.h" />
-    <ClInclude Include="Icon.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Region.h" />
