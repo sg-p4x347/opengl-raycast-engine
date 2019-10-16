@@ -1,13 +1,12 @@
 /*-----------------------------------------------------------------------------------------
- COURSE:				CSC525 lab8
- PROGRAMMERS:			Gage Coates (Coates347)
- MODIFIED BY:			Gage Coates (Coates347)
- DATE MODIFIED:			10/2/2019
-
- FOLDER:				Coates347
- DESCRIPTION:			Lab8: read a color bitmap from file and render it to the screen
+ COURSE:				CSC525 Project 1
+ PROGRAMMERS:			Gage Coates		(Coates347)
+						Paul Durham		(Durham321)
+						Anthony Harris	(Anthony999)
+						Devlyn Hogue	(Hogue3)
+ LAST MODIFIED:			10/16/2019
+ DESCRIPTION:			Project 1. A simple Doom-esque game using raycasting and OpenGL.
  NOTE:					N/A
- FILES:					bitmap.cpp
  IDE/COMPILER:			MicroSoft Visual Studio 2019
  INSTRUCTION FOR COMPILATION AND EXECUTION:
 	1.		Double click on labProject.sln	to OPEN the project
