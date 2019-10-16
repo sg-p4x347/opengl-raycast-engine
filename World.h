@@ -9,6 +9,11 @@
 class World
 {
 public:
+	enum class Menu {
+		HUD,
+		Death,
+		Credits
+	};
 	friend class Sprite;
 	friend class Player;
 	friend class Item;
@@ -24,7 +29,7 @@ public:
 	void UpdateBackBuffer(int width, int height);
 
 	void AddRooms();
-	
+	void OpenMenu(Menu menu);
 	
 	shared_ptr<Player> GetPlayer();
 	// Sprites
@@ -61,6 +66,8 @@ private:
 	Vector2 m_mousePosition;
 	bool m_lockPointer;
 
+	Menu m_menu;
+
 private:
 	//----------------------------------------------------------------
 	// Cursor
@@ -77,6 +84,7 @@ private:
 	// Updating
 	void UpdateSprites(double& elapsed, set<shared_ptr<Sprite>>& sprites);
 	void UpdateWalls(double& elapsed, set<shared_ptr<Wall>>& walls);
+	void ResetPlayer();
 
 	//----------------------------------------------------------------
 	// Regions

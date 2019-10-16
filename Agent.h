@@ -16,6 +16,7 @@ public:
 	float MeleeDamage;
 	float AttackCooldown;
 	float AttackTimer;
+	float DamageTimer;
 
 	float Angle;
 	float Speed;

@@ -81,7 +81,7 @@
     <ClCompile Include="Bullet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Icon.cpp">
+    <ClCompile Include="Reticle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -157,7 +157,7 @@
     <ClInclude Include="Bullet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Icon.h">
+    <ClInclude Include="Reticle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

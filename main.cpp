@@ -40,6 +40,7 @@ int main(int argc, char ** argv) {
 	// register a callback
 	glutDisplayFunc(render);
 	glutPassiveMotionFunc(mouseMoveHandler);
+	glutMotionFunc(mouseMoveHandler);
 	glutMouseFunc(mouseButtonHandler);
 	glutKeyboardFunc(keyHandler);
 	glutKeyboardUpFunc(keyUpHandler);

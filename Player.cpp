@@ -13,11 +13,12 @@ Player::Player(
 	float farPlane,
 	float speed,
 	float radius
-) : Agent::Agent(position, radius,speed,1.f,2.f),
+) : Agent::Agent(position, radius,speed,10.f,2.f),
 FOV(fov),
 NearPlane(nearPlane),
 FarPlane(farPlane),
 Displacement(0.f),
+ActiveItem(""),
 hud(this)
 {
 	AttackCooldown = 1.f;
@@ -85,22 +86,26 @@ void Player::Update(double& elapsed, World* world)
 				Inventory[door->Key]--;
 			}
 		}
-		// Melee attack
+		Attack = false;
 		if (world->m_buttonStates[GLUT_LEFT_BUTTON] && Inventory["knife.bmp"] > 0) {
+			ActiveItem = "knife.bmp";
+			// Melee attack
 			Attack = true;
 		}
-		else {
-			Attack = false;
+		else if (world->m_buttonStates[GLUT_RIGHT_BUTTON] && Inventory["shotgun.bmp"] > 0) {
+			ActiveItem = "shotgun.bmp";
+			// Ranged attack
+			if (AttackTimer >= AttackCooldown) {
+				AttackTimer = 0.f;
+				// Spawn a bullet
+				float bulletRadius = 0.05f;
+				Vector2 bulletPos = GetMapPosition() + GetHeading() * (Radius + bulletRadius + 0.001f);
+				Vector3 velocity = Vector3(GetHeading().X, 0.f, GetHeading().Y) * 20.f;
+				world->AddSprite(std::make_shared<Bullet>(Vector3(bulletPos.X, Position.Y, bulletPos.Y), velocity, bulletRadius, 1.f, "bird_shot.bmp"));
+			}
 		}
-
-		// Ranged attack
-		if (world->m_buttonStates[GLUT_RIGHT_BUTTON] && Inventory["shotgun.bmp"] > 0 && AttackTimer >= AttackCooldown) {
-			AttackTimer = 0.f;
-			// Spawn a bullet
-			float bulletRadius = 0.05f;
-			Vector2 bulletPos = GetMapPosition() + GetHeading() * (Radius + bulletRadius + 0.001f);
-			Vector3 velocity = Vector3(GetHeading().X, 0.f, GetHeading().Y) * 20.f;
-			world->AddSprite(std::make_shared<Bullet>(Vector3(bulletPos.X, Position.Y, bulletPos.Y), velocity, bulletRadius, 1.f, "bird_shot.bmp"));
-		}
+	}
+	else {
+		world->OpenMenu(World::Menu::Death);
 	}
 }

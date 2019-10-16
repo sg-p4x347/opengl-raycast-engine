@@ -7,12 +7,14 @@ class World;
 class Player : public Agent
 {
 public:
+
 	Player(Vector3 position, float angle, float fov, float nearPlane, float farPlane, float speed, float radius);
 	virtual void Displace(Vector3 displacement) override;
 	virtual void Update(double& elapsed, World * world) override;
 	
 	float NearPlane;
 	float FarPlane;
+	string ActiveItem;
 
 	float FOV;
 	float Displacement;

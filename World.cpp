@@ -15,8 +15,7 @@ World::World()
 {
 
 	// The player
-	m_player = std::make_shared<Player>(Vector3(2.f, 0.5f, 2.f), 0.f, 1.f, 0.1f, 1000.f, 4.f, 0.25f);
-	AddSprite(m_player);
+	ResetPlayer();
 	m_floorColor = Pixel(26, 26, 26, 255);
 	m_ceilingColor = Pixel(40, 40, 40, 255);
 	AddRooms();
@@ -97,18 +96,32 @@ void World::AddRooms()
   // GAGE'S ROOM
 }
 
+void World::OpenMenu(Menu menu)
+{
+	m_menu = menu;
+}
+
 void World::Update(double& elapsed)
 {
-	Vector2 playerPos = m_player->GetMapPosition();
-	m_loadedRegions.clear();
-	RegionsContainingRect(Rect(playerPos - Vector2(UPDATE_RANGE, UPDATE_RANGE), Vector2(2.f * UPDATE_RANGE, 2.f * UPDATE_RANGE)), m_loadedRegions);
-	m_sprites = CollectSprites(m_loadedRegions);
-	UpdateSprites(elapsed, m_sprites);
-	m_walls = CollectWalls(m_loadedRegions);
-	UpdateWalls(elapsed, m_walls);
-
+	// Abort
 	if (m_keyStates[27]) {
 		UnlockPointer();
+	}
+	if (m_menu == Menu::HUD) {
+		Vector2 playerPos = m_player->GetMapPosition();
+		m_loadedRegions.clear();
+		RegionsContainingRect(Rect(playerPos - Vector2(UPDATE_RANGE, UPDATE_RANGE), Vector2(2.f * UPDATE_RANGE, 2.f * UPDATE_RANGE)), m_loadedRegions);
+		m_sprites = CollectSprites(m_loadedRegions);
+		UpdateSprites(elapsed, m_sprites);
+		m_walls = CollectWalls(m_loadedRegions);
+		UpdateWalls(elapsed, m_walls);
+	}
+	else if (m_keyStates[13]) {
+		switch (m_menu) {
+		case Menu::Death:
+			ResetPlayer();
+		}
+		m_menu = Menu::HUD;
 	}
 }
 
@@ -162,7 +175,7 @@ Bitmap& World::GetTexture(string name)
 	}
 	else {
 		// Load the texture from file
-		auto texture = std::make_shared<Bitmap>(Bitmap::FromFile(name));
+		auto texture = std::make_shared<Bitmap>(Bitmap::FromFile("images/" + name));
 		m_textures.insert(std::make_pair(name, texture));
 		return *texture;
 	}
@@ -453,6 +466,15 @@ void World::UpdateWalls(double& elapsed, set<shared_ptr<Wall>>& walls)
 	for (auto& wall : walls) {
 		wall->Update(elapsed, this);
 	}
+}
+
+void World::ResetPlayer()
+{
+	if (m_player)
+		RemoveSprite(m_player);
+
+	m_player = std::make_shared<Player>(Vector3(2.f, 0.5f, 2.f), 0.f, 1.f, 0.1f, 1000.f, 4.f, 0.25f);
+	AddSprite(m_player);
 }
 
 void World::RegionsContainingPoint(Vector2 point, set<shared_ptr<Region>>& regions)
