@@ -9,6 +9,9 @@ Reticle::Reticle()
 void Reticle::renderReticle(int windowWidth, int windowHeight, float percentage)
 {
 	glColor3f(1, 0, 0);
+	/******************************************************
+	CIRCLE
+	******************************************************/
 	glBegin(GL_POINTS);
 	float width = 64.f;
 	float height = width;// windowHeight / 2.f;

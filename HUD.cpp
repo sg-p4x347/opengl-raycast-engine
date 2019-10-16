@@ -29,7 +29,6 @@ void HUD::render(int windowWidth, int windowHeight)
 	bottomBackground(sizeOfBottom, yPadding, xPadding, windowWidth, windowHeight);
 	addTiles(sizeOfBottom, yPadding, xPadding, windowWidth, windowHeight);
 	renderFace(windowWidth, windowHeight);
-	//addIcons(sizeOfBottom, yPadding, xPadding);
 }
 
 void HUD::addReticle(int windowWidth, int windowHeight)
@@ -85,6 +84,10 @@ void HUD::bottomBackground(float& sizeOfBottom, float& yPadding, float& xPadding
 
 	glColor4f(1, 1, 1,0.5f);
 	glLineWidth(5);
+
+	/******************************************************
+	LINE SEGMENTS
+	******************************************************/
 	glBegin(GL_LINES);
 
 	//Top bar
@@ -105,6 +108,11 @@ void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int wi
 		int right = left + icon.GetWidth();
 		int top = sizeOfBottom - (yPadding / 2.0);
 		int bottom = yPadding / 2.0;
+
+
+		/******************************************************
+		PATTERN FILLED POLYGONS
+		******************************************************/
 		glEnable(GL_POLYGON_STIPPLE);
 		glPolygonStipple(&m_stipple[0]);
 		glEnd();
@@ -121,9 +129,15 @@ void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int wi
 		glDisable(GL_POLYGON_STIPPLE);
 		glRasterPos2d(left, bottom);
 		if (m_player->Inventory[iconEntry.first] > 0) {
+			/******************************************************
+			PIXEL MAPS
+			******************************************************/
 			glDrawPixels(icon.GetWidth(), icon.GetWidth(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)icon.GetPixels());
 		}
 		else {
+			/******************************************************
+			BITMAPS
+			******************************************************/
 			// The player does not have this item, so render a flat color version of the full color icon
 			auto & mask = IconMasks[iconEntry.first];
 			glColor3f(0.1f, 0.1f, 0.1f);

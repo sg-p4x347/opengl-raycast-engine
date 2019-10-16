@@ -29,10 +29,11 @@ World world;
 
 int main(int argc, char ** argv) {
 	glutInit(&argc, argv);
-	// specify a window size
-	glutInitWindowSize(600, 600);
 	// specify a window position
 	glutInitWindowPosition(0, 0);
+	// specify a window size
+	glutInitWindowSize(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+	
 	// create a titled window
 	glutCreateWindow("Project 1");	
 	// setting up
@@ -60,7 +61,7 @@ void initialize() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	world.UpdateBackBuffer(glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+	world.UpdateBackBuffer(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
 
 }
 void gameTick(int value)

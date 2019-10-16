@@ -92,9 +92,6 @@ void World::AddRooms()
 	AddWall(std::make_shared<Wall>(Vector2(0, 8), Vector2(0, 9), "logo.bmp"));
 
 
-
-	//CreateWallArc("bricks.bmp", Vector2(2.f, 2.f), 1.f, 0.f, M_PI * 2.f, M_PI * 2.f / 6.f);
-
 	// DEVLYN'S ROOM
 
 	// PAUL'S ROOM
@@ -108,7 +105,6 @@ void World::AddRooms()
 	// Left door
 	AddWall(std::make_shared<Door>(Vector2(2, -9), Vector2(3, -9.5), "door.bmp", "key.bmp", Vector2(0.f, 0.25f), false));
 	// Right door
-	//AddWall(std::make_shared<Door>(Vector2(2,-12), Vector2(3, -11.5), "door.bmp", "key.bmp", Vector2(0.f, 0.25f), false));
 
 	CreateWallPath(
 		"bricks.bmp", 
@@ -556,7 +552,9 @@ void World::RenderPerspective()
 			});
 	}
 
-
+	/******************************************************
+	PIXEL MAPS
+	******************************************************/
 	glRasterPos2d(0, 0);
 	glPixelZoom(pixelSize, pixelSize);
 	glDrawPixels(m_backBuffer->GetWidth(), m_backBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)m_backBuffer->GetPixels());
@@ -676,6 +674,9 @@ int World::MeasureString(void* font, string text)
 
 void World::DrawString(void* font, string text)
 {
+	/******************************************************
+	TEXT
+	******************************************************/
 	for (auto& ch : text) {
 		glutBitmapCharacter(font, ch);
 	}
