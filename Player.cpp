@@ -5,6 +5,7 @@
 #include "Door.h"
 #include "Bullet.h"
 
+const float Player::MaxHealth = 6.f;
 Player::Player(
 	Vector3 position,
 	float angle,
@@ -13,7 +14,7 @@ Player::Player(
 	float farPlane,
 	float speed,
 	float radius
-) : Agent::Agent(position, radius,speed,10.f,2.f),
+) : Agent::Agent(position, radius,speed,MaxHealth,2.f),
 FOV(fov),
 NearPlane(nearPlane),
 FarPlane(farPlane),
@@ -85,6 +86,11 @@ void Player::Update(double& elapsed, World* world)
 				// Consume the key
 				Inventory[door->Key]--;
 			}
+			if (wall->Texture == "logo.bmp") {
+
+				// Roll the credits
+				world->OpenMenu(World::Menu::Credits);
+			}
 		}
 		Attack = false;
 		if (world->m_buttonStates[GLUT_LEFT_BUTTON] && Inventory["knife.bmp"] > 0) {
@@ -104,8 +110,5 @@ void Player::Update(double& elapsed, World* world)
 				world->AddSprite(std::make_shared<Bullet>(Vector3(bulletPos.X, Position.Y, bulletPos.Y), velocity, bulletRadius, 1.f, "bird_shot.bmp"));
 			}
 		}
-	}
-	else {
-		world->OpenMenu(World::Menu::Death);
 	}
 }

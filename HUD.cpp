@@ -11,9 +11,10 @@ HUD::HUD(Player* player) : m_player(player)
 	REGISTER_ICON("shotgun.bmp", "shotgun_icon.bmp", "shotgun_view.bmp");
 
 	m_healthyFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/healthy_face.bmp"));
-	m_takingDamageFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/taking_damage_face.bmp"));
+	m_damagedFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/damaged_face.bmp"));
 	m_unhealthyFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/unhealthy_face.bmp"));
-	m_deadFace = std::make_shared<Bitmap>(Bitmap::FromFile("images/dead_face.bmp"));
+
+	m_stipple = Bitmap::FromFile("images/stipple.bmp").GetOpaqueBitMask();
 }
 
 
@@ -39,7 +40,7 @@ void HUD::addReticle(int windowWidth, int windowHeight)
 void HUD::renderActiveItem(int windowWidth, int windowHeight)
 {
 	if (Views.count(m_player->ActiveItem)) {
-		static const float scale = ((float)windowHeight / 128.f) * 0.5;
+		const float scale = ((float)windowHeight / 128.f) * 0.5;
 		glPixelZoom(scale, scale);
 		auto& view = *Views[m_player->ActiveItem];
 		
@@ -51,19 +52,15 @@ void HUD::renderActiveItem(int windowWidth, int windowHeight)
 void HUD::renderFace(int windowWidth, int windowHeight)
 {
 	shared_ptr<Bitmap> face;
-	if (m_player->DamageTimer < 1.f) {
-		face = m_takingDamageFace;
+	float percentHealth = m_player->Health / Player::MaxHealth;
+	if (percentHealth > 2.f / 3.f) {
+		face = m_healthyFace;
+	}
+	else if (percentHealth > 1.f / 3.f) {
+		face = m_damagedFace;
 	}
 	else {
-		if (m_player->Health > 2.f) {
-			face = m_healthyFace;
-		}
-		else if (m_player->Health > 0.f) {
-			face = m_unhealthyFace;
-		}
-		else {
-			face = m_deadFace;
-		}
+		face = m_unhealthyFace;
 	}
 	static const float scale = 1.f;
 	glPixelZoom(scale, scale);
@@ -108,6 +105,10 @@ void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int wi
 		int right = left + icon.GetWidth();
 		int top = sizeOfBottom - (yPadding / 2.0);
 		int bottom = yPadding / 2.0;
+		glEnable(GL_POLYGON_STIPPLE);
+		glPolygonStipple(&m_stipple[0]);
+		glEnd();
+		
 		glBegin(GL_POLYGON);
 
 		glColor4f(0, 0, 0,0.5f);
@@ -117,6 +118,7 @@ void HUD::addTiles(float& sizeOfBottom, float& yPadding, float& xPadding, int wi
 		glVertex2d(left, bottom);
 
 		glEnd();
+		glDisable(GL_POLYGON_STIPPLE);
 		glRasterPos2d(left, bottom);
 		if (m_player->Inventory[iconEntry.first] > 0) {
 			glDrawPixels(icon.GetWidth(), icon.GetWidth(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)icon.GetPixels());

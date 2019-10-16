@@ -19,9 +19,9 @@ public:
 private:
 	Player* m_player;
 	shared_ptr<Bitmap> m_healthyFace;
-	shared_ptr<Bitmap> m_takingDamageFace;
+	shared_ptr<Bitmap> m_damagedFace;
 	shared_ptr<Bitmap> m_unhealthyFace;
-	shared_ptr<Bitmap> m_deadFace;
+	vector<uint8_t> m_stipple;
 
 	void addReticle(int windowWidth, int windowHeight);
 	void renderActiveItem(int windowWidth, int windowHeight);

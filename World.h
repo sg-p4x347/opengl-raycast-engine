@@ -79,7 +79,8 @@ private:
 	void RenderPerspective();
 	void RenderHUD();
 	void RenderMenu();
-
+	int MeasureString(void*font, string text);
+	void DrawString(void* font, string text);
 	//----------------------------------------------------------------
 	// Updating
 	void UpdateSprites(double& elapsed, set<shared_ptr<Sprite>>& sprites);

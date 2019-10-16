@@ -4,7 +4,7 @@
 Spider::Spider(Vector3 position) : Agent::Agent(position, 0.25f,1.f,1.f,0.5f,"spider.bmp","dead_spider.bmp")
 {
 	MeleeDamage = 1.f;
-	SpideySenseRange = 20.f;
+	SpideySenseRange = 6.f;
 	AttackCooldown = 2.f;
 	AttackTimer = AttackCooldown;
 	Attack = true;
